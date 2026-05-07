@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import InvoiceContent from "@/components/InvoiceContent";
 import type { Project } from "./Projects";
+import { supabase } from "@/lib/supabase";
 
 export default function Invoice() {
   const { projectId } = useParams();
@@ -14,22 +15,65 @@ export default function Invoice() {
   const [gstType, setGstType] = useState<"igst" | "cgst-sgst">("igst");
 
   useEffect(() => {
-    // Load project from localStorage
-    const savedProjects = localStorage.getItem("crm_projects");
-    if (savedProjects) {
-      try {
+    loadProject();
+  }, [projectId]);
+
+  const loadProject = async () => {
+    try {
+      // Try Supabase first
+      if (supabase && projectId) {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .single();
+
+        if (!error && data) {
+          const project: Project = {
+            id: data.id,
+            customerName: data.customer_name,
+            contactNo: data.contact_no,
+            location: data.location,
+            productDescription: data.product_description,
+            hsnNo: data.hsn_no,
+            chassisNo: data.chassis_no,
+            amount: data.amount,
+            createdAt: new Date(data.created_at).toLocaleDateString(),
+          };
+          setProject(project);
+          setInvoiceNo(`AAV/2026-27/001`);
+          return;
+        }
+      }
+
+      // Fallback to localStorage if Supabase fails or no data
+      const savedProjects = localStorage.getItem("crm_projects");
+      if (savedProjects) {
         const projects = JSON.parse(savedProjects) as Project[];
         const foundProject = projects.find((p) => p.id === projectId);
         if (foundProject) {
           setProject(foundProject);
-          // Generate invoice number based on project ID
           setInvoiceNo(`AAV/2026-27/${String(projects.indexOf(foundProject) + 1).padStart(3, "0")}`);
         }
-      } catch (error) {
-        console.error("Error loading project:", error);
+      }
+    } catch (error) {
+      console.error("Error loading project:", error);
+      // Fallback to localStorage
+      const savedProjects = localStorage.getItem("crm_projects");
+      if (savedProjects) {
+        try {
+          const projects = JSON.parse(savedProjects) as Project[];
+          const foundProject = projects.find((p) => p.id === projectId);
+          if (foundProject) {
+            setProject(foundProject);
+            setInvoiceNo(`AAV/2026-27/${String(projects.indexOf(foundProject) + 1).padStart(3, "0")}`);
+          }
+        } catch (e) {
+          console.error("Error loading from localStorage:", e);
+        }
       }
     }
-  }, [projectId]);
+  };
 
   if (!project) {
     return (

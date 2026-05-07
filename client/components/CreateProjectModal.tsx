@@ -6,7 +6,7 @@ import type { Project } from "@/pages/Projects";
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateProject: (project: Omit<Project, "id" | "createdAt">) => void;
+  onCreateProject: (project: Omit<Project, "id" | "createdAt">) => Promise<void>;
 }
 
 export default function CreateProjectModal({
@@ -20,6 +20,7 @@ export default function CreateProjectModal({
     location: "",
     productDescription: "",
     hsnNo: "",
+    chassisNo: "",
     amount: "",
   });
 
@@ -60,6 +61,9 @@ export default function CreateProjectModal({
     if (!formData.hsnNo.trim()) {
       newErrors.hsnNo = "HSN number is required";
     }
+    if (!formData.chassisNo.trim()) {
+      newErrors.chassisNo = "Chassis number is required";
+    }
     if (!formData.amount.trim()) {
       newErrors.amount = "Amount is required";
     } else if (isNaN(parseFloat(formData.amount))) {
@@ -70,19 +74,20 @@ export default function CreateProjectModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    onCreateProject({
+    await onCreateProject({
       customerName: formData.customerName,
       contactNo: formData.contactNo,
       location: formData.location,
       productDescription: formData.productDescription,
       hsnNo: formData.hsnNo,
+      chassisNo: formData.chassisNo,
       amount: parseFloat(formData.amount),
     });
 
@@ -93,6 +98,7 @@ export default function CreateProjectModal({
       location: "",
       productDescription: "",
       hsnNo: "",
+      chassisNo: "",
       amount: "",
     });
   };
@@ -230,6 +236,26 @@ export default function CreateProjectModal({
               />
               {errors.hsnNo && (
                 <p className="text-sm text-destructive mt-1">{errors.hsnNo}</p>
+              )}
+            </div>
+
+            {/* Chassis No */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Chassis No. *
+              </label>
+              <input
+                type="text"
+                name="chassisNo"
+                value={formData.chassisNo}
+                onChange={handleChange}
+                placeholder="Enter chassis number"
+                className={`w-full px-4 py-2 border rounded-lg bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                  errors.chassisNo ? "border-destructive" : "border-border"
+                }`}
+              />
+              {errors.chassisNo && (
+                <p className="text-sm text-destructive mt-1">{errors.chassisNo}</p>
               )}
             </div>
 

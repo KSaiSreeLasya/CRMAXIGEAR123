@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CreateProjectModal from "@/components/CreateProjectModal";
+import { supabase } from "@/lib/supabase";
 
 export interface Project {
   id: string;
@@ -12,6 +13,7 @@ export interface Project {
   location: string;
   productDescription: string;
   hsnNo: string;
+  chassisNo: string;
   amount: number;
   createdAt: string;
 }
@@ -20,35 +22,112 @@ export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Load projects from localStorage on mount
+  // Load projects from Supabase on mount
   useEffect(() => {
-    const savedProjects = localStorage.getItem("crm_projects");
-    if (savedProjects) {
-      try {
-        setProjects(JSON.parse(savedProjects));
-      } catch (error) {
-        console.error("Error loading projects:", error);
-      }
-    }
+    loadProjects();
   }, []);
 
-  // Save projects to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("crm_projects", JSON.stringify(projects));
-  }, [projects]);
+  const loadProjects = async () => {
+    try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
 
-  const handleCreateProject = (newProject: Omit<Project, "id" | "createdAt">) => {
-    const project: Project = {
-      ...newProject,
-      id: Date.now().toString(),
-      createdAt: new Date().toLocaleDateString(),
-    };
-    setProjects([project, ...projects]);
-    setIsModalOpen(false);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedProjects = data?.map((project: any) => ({
+        id: project.id,
+        customerName: project.customer_name,
+        contactNo: project.contact_no,
+        location: project.location,
+        productDescription: project.product_description,
+        hsnNo: project.hsn_no,
+        chassisNo: project.chassis_no,
+        amount: project.amount,
+        createdAt: new Date(project.created_at).toLocaleDateString(),
+      })) || [];
+
+      setProjects(formattedProjects);
+    } catch (error) {
+      console.error("Error loading projects:", error);
+      // Fallback to localStorage if Supabase fails
+      const savedProjects = localStorage.getItem("crm_projects");
+      if (savedProjects) {
+        try {
+          setProjects(JSON.parse(savedProjects));
+        } catch (e) {
+          console.error("Error loading from localStorage:", e);
+        }
+      }
+    }
   };
 
-  const handleDeleteProject = (id: string) => {
-    setProjects(projects.filter((p) => p.id !== id));
+  const handleCreateProject = async (newProject: Omit<Project, "id" | "createdAt">) => {
+    try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([
+          {
+            customer_name: newProject.customerName,
+            contact_no: newProject.contactNo,
+            location: newProject.location,
+            product_description: newProject.productDescription,
+            hsn_no: newProject.hsnNo,
+            chassis_no: newProject.chassisNo,
+            amount: newProject.amount,
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+
+      const createdProject: Project = {
+        id: data[0].id,
+        customerName: data[0].customer_name,
+        contactNo: data[0].contact_no,
+        location: data[0].location,
+        productDescription: data[0].product_description,
+        hsnNo: data[0].hsn_no,
+        chassisNo: data[0].chassis_no,
+        amount: data[0].amount,
+        createdAt: new Date(data[0].created_at).toLocaleDateString(),
+      };
+
+      setProjects([createdProject, ...projects]);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      alert("Failed to create project. Please try again.");
+    }
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setProjects(projects.filter((p) => p.id !== id));
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      alert("Failed to delete project. Please try again.");
+    }
   };
 
   const formatAmount = (amount: number) => {
@@ -117,6 +196,9 @@ export default function Projects() {
                       HSN No.
                     </th>
                     <th className="px-6 py-4 text-left font-semibold text-foreground">
+                      Chassis No.
+                    </th>
+                    <th className="px-6 py-4 text-left font-semibold text-foreground">
                       Amount
                     </th>
                     <th className="px-6 py-4 text-left font-semibold text-foreground">
@@ -141,6 +223,9 @@ export default function Projects() {
                       </td>
                       <td className="px-6 py-4 font-mono text-sm">
                         {project.hsnNo}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-sm">
+                        {project.chassisNo}
                       </td>
                       <td className="px-6 py-4 font-semibold text-success">
                         {formatAmount(project.amount)}
