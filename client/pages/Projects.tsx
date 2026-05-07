@@ -1,7 +1,8 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { Plus, Trash2, Edit, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import CreateProjectModal from "@/components/CreateProjectModal";
 
 export interface Project {
@@ -148,14 +149,22 @@ export default function Projects() {
                         {project.createdAt}
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleDeleteProject(project.id)}
-                          className="inline-flex items-center gap-2 text-destructive hover:text-destructive/90 transition-colors font-medium text-sm"
-                          title="Delete project"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <Link to={`/invoice/${project.id}`}>
+                            <button className="inline-flex items-center gap-2 text-primary hover:text-primary/90 transition-colors font-medium text-sm">
+                              <FileText className="w-4 h-4" />
+                              Invoice
+                            </button>
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="inline-flex items-center gap-2 text-destructive hover:text-destructive/90 transition-colors font-medium text-sm"
+                            title="Delete project"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
