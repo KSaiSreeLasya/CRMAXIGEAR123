@@ -25,6 +25,7 @@ export default function Invoice() {
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [invoiceNo, setInvoiceNo] = useState("AAV/2026-27/001");
+  const [gstType, setGstType] = useState<"igst" | "cgst-sgst">("igst");
 
   useEffect(() => {
     // Load project from localStorage
@@ -60,13 +61,23 @@ export default function Invoice() {
     );
   }
 
-  // Calculate taxes (simplified: 2.5% CGST + 2.5% SGST for most goods)
+  // Calculate taxes based on GST type
   const baseAmount = project.amount;
-  const cgstRate = 0.025;
-  const sgstRate = 0.025;
-  const cgstAmount = baseAmount * cgstRate;
-  const sgstAmount = baseAmount * sgstRate;
-  const totalAmount = baseAmount + cgstAmount + sgstAmount;
+  let igstAmount = 0;
+  let cgstAmount = 0;
+  let sgstAmount = 0;
+  let totalAmount = baseAmount;
+
+  if (gstType === "igst") {
+    // IGST: 5% (for inter-state transactions)
+    igstAmount = baseAmount * 0.05;
+    totalAmount = baseAmount + igstAmount;
+  } else {
+    // CGST + SGST: 2.5% each (for intra-state transactions)
+    cgstAmount = baseAmount * 0.025;
+    sgstAmount = baseAmount * 0.025;
+    totalAmount = baseAmount + cgstAmount + sgstAmount;
+  }
 
   const handlePrint = () => {
     window.print();
@@ -261,7 +272,17 @@ export default function Invoice() {
 
           {/* Tax Summary */}
           <div className="mb-8 grid grid-cols-2 gap-8">
-            <div></div>
+            <div>
+              <p className="text-xs text-gray-600 font-semibold mb-2">GST Type:</p>
+              <select
+                value={gstType}
+                onChange={(e) => setGstType(e.target.value as "igst" | "cgst-sgst")}
+                className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+              >
+                <option value="igst">IGST (5%) - Inter-state</option>
+                <option value="cgst-sgst">CGST+SGST (2.5% each) - Intra-state</option>
+              </select>
+            </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
                 <span>Total Value</span>
@@ -269,22 +290,49 @@ export default function Invoice() {
                   {baseAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
-                <span>IGST VALUE</span>
-                <span className="font-semibold">-</span>
-              </div>
-              <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
-                <span>CGST VALUE</span>
-                <span className="font-semibold">
-                  {cgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
-                <span>SGST VALUE</span>
-                <span className="font-semibold">
-                  {sgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
+              {gstType === "igst" ? (
+                <>
+                  <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
+                    <span>IGST VALUE (5%)</span>
+                    <span className="font-semibold">
+                      {igstAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
+                    <span>CGST VALUE</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
+                    <span>SGST VALUE</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
+                    <span>IGST VALUE</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
+                    <span>CGST VALUE (2.5%)</span>
+                    <span className="font-semibold">
+                      {cgstAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
+                    <span>SGST VALUE (2.5%)</span>
+                    <span className="font-semibold">
+                      {sgstAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between text-lg font-bold pt-2 border-t-2 border-gray-300">
                 <span>INVOICE VALUE</span>
                 <span>
