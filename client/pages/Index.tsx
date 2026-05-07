@@ -160,7 +160,7 @@ export default function Index() {
                     {feature.description}
                   </p>
                   <Link
-                    to="/sales"
+                    to="/projects"
                     className="text-primary font-semibold text-sm flex items-center gap-2 hover:gap-3 transition-all"
                   >
                     Learn More <ArrowRight className="w-4 h-4" />
@@ -213,9 +213,9 @@ export default function Index() {
               <p className="text-muted-foreground">
                 Get real-time visibility into sales performance, retailer behavior, inventory levels, and market trends. Make data-driven decisions with comprehensive analytics and reporting.
               </p>
-              <Link to="/analytics">
+              <Link to="/projects">
                 <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  View Analytics Demo
+                  View Projects
                 </Button>
               </Link>
             </div>
