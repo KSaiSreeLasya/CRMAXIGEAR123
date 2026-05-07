@@ -46,7 +46,7 @@ export default function InvoiceContent({
 
   const containerClass = forPrint
     ? "bg-white text-black p-12 w-full"
-    : "bg-white text-black p-8 md:p-12 max-w-4xl mx-auto rounded-lg border border-gray-300";
+    : "bg-white text-black p-8 md:p-12 max-w-5xl mx-auto rounded-lg border-2 border-gray-300 shadow-lg";
 
   return (
     <div id="invoice-container" className={containerClass}>

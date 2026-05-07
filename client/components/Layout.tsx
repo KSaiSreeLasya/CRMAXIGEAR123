@@ -1,10 +1,17 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, Menu } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import { useState } from "react";
+import { logout } from "@/lib/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -12,10 +19,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-              <Zap className="w-5 h-5" />
-            </div>
-            <span>EV CRM</span>
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2Fe8b0f34e11e04fd5ad5fe77ca26e5a4c%2F898bd506bd194b53a5eda248601c50c7?format=webp&width=64&height=64"
+              alt="AXIGEAR"
+              className="w-6 h-6"
+            />
+            <span>AXIGEAR CRM</span>
           </Link>
 
           {/* Mobile menu button */}
@@ -29,32 +38,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              to="/"
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Dashboard
-            </Link>
-            <Link
               to="/projects"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Projects
             </Link>
-            <Link
-              to="/sales"
-              className="text-sm font-medium transition-colors hover:text-primary"
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-destructive"
             >
-              Sales
-            </Link>
-            <Link
-              to="/analytics"
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Analytics
-            </Link>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              Start Trial
-            </Button>
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
           </nav>
         </div>
 
@@ -63,36 +58,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="md:hidden border-t border-border bg-background">
             <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
               <Link
-                to="/"
-                className="text-sm font-medium transition-colors hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-              <Link
                 to="/projects"
                 className="text-sm font-medium transition-colors hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Projects
               </Link>
-              <Link
-                to="/sales"
-                className="text-sm font-medium transition-colors hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-destructive text-left"
               >
-                Sales
-              </Link>
-              <Link
-                to="/analytics"
-                className="text-sm font-medium transition-colors hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Analytics
-              </Link>
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                Start Trial
-              </Button>
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
             </nav>
           </div>
         )}
@@ -167,7 +148,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 EV CRM. All rights reserved.</p>
+            <p>&copy; 2024 AXIGEAR CRM. All rights reserved.</p>
           </div>
         </div>
       </footer>
