@@ -5,14 +5,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let supabase: any = null;
 
-try {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Missing Supabase environment variables. Running in offline mode.');
-  } else {
+if (supabaseUrl && supabaseAnonKey) {
+  try {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
+    console.log('Supabase initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Supabase client:', error);
+    supabase = null;
   }
-} catch (error) {
-  console.error('Failed to initialize Supabase client:', error);
+} else {
+  console.warn('Missing Supabase environment variables. Running in offline mode.');
 }
 
 export { supabase };
