@@ -9,7 +9,7 @@ interface InvoiceContentProps {
 }
 
 const COMPANY_INFO = {
-  name: "AXIGEAR AUTO VENTURES LLP",
+  name: "AXIGEAR ELECTRIC LOUNGE",
   address: "SY 02, PLOT NO.148, MYTHRI NAGAR, MADINAGUDA",
   city: "HYDERABAD, TELANGANA, INDIA 500049",
   gstin: "36ACJFA4386L1ZW",
