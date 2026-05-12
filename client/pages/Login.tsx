@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { hydrateAuthTokenFromSupabase, isAuthenticated } from "@/lib/auth";
+import { hydrateAuthTokenFromSupabase, isAuthenticated, setEmployeeSession } from "@/lib/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,17 +28,35 @@ export default function Login() {
           email,
           password,
         });
-        if (error) throw error;
-        if (data.session?.access_token) {
-          localStorage.setItem("auth_token", data.session.access_token);
-        } else {
-          await hydrateAuthTokenFromSupabase();
+        if (!error) {
+          if (data.session?.access_token) {
+            localStorage.setItem("auth_token", data.session.access_token);
+          } else {
+            await hydrateAuthTokenFromSupabase();
+          }
+          if (!isAuthenticated()) {
+            throw new Error(
+              "Sign-in did not return a session. Confirm your email in Supabase or try again.",
+            );
+          }
+          navigate("/dashboard", { replace: true });
+          return;
         }
-        if (!isAuthenticated()) {
-          throw new Error(
-            "Sign-in did not return a session. Confirm your email in Supabase or try again.",
-          );
-        }
+
+        // Employee login fallback (email + password managed by Admin module)
+        const { data: employeeData, error: employeeError } = await supabase.rpc("employee_login", {
+          p_email: email,
+          p_password: password,
+        });
+        if (employeeError) throw employeeError;
+        const employee = employeeData?.[0];
+        if (!employee) throw error;
+
+        setEmployeeSession({
+          employeeId: employee.employee_id,
+          employeeName: employee.employee_name,
+          employeeRole: employee.employee_role || "Employee",
+        });
         navigate("/dashboard", { replace: true });
       } else {
         // Offline mode: allow login without Supabase

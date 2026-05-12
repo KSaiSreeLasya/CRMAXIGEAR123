@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import type { Project } from "@/pages/Projects";
+import { supabase } from "@/lib/supabase";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export default function CreateProjectModal({
   onCreateProject,
 }: CreateProjectModalProps) {
   const [formData, setFormData] = useState({
+    modelNo: "",
     customerName: "",
     contactNo: "",
     location: "",
@@ -28,6 +30,8 @@ export default function CreateProjectModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isFetchingModelData, setIsFetchingModelData] = useState(false);
+  const [modelLookupMessage, setModelLookupMessage] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -44,11 +48,21 @@ export default function CreateProjectModal({
         [name]: "",
       }));
     }
+
+    if (name === "modelNo") {
+      setModelLookupMessage("");
+      if (value.trim().length >= 2) {
+        void handleModelLookup(value);
+      }
+    }
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    if (!formData.modelNo.trim()) {
+      newErrors.modelNo = "Model number is required";
+    }
     if (!formData.customerName.trim()) {
       newErrors.customerName = "Customer name is required";
     }
@@ -94,6 +108,7 @@ export default function CreateProjectModal({
     }
 
     await onCreateProject({
+      modelNo: formData.modelNo,
       customerName: formData.customerName,
       contactNo: formData.contactNo,
       location: formData.location,
@@ -108,6 +123,7 @@ export default function CreateProjectModal({
 
     // Reset form
     setFormData({
+      modelNo: "",
       customerName: "",
       contactNo: "",
       location: "",
@@ -119,6 +135,58 @@ export default function CreateProjectModal({
       invoiceDate: "",
       amount: "",
     });
+  };
+
+  const handleModelLookup = async (modelNoInput?: string) => {
+    const modelInput = (modelNoInput ?? formData.modelNo).trim();
+    if (!modelInput) return;
+    setIsFetchingModelData(true);
+    setModelLookupMessage("");
+    try {
+      let matched: any = null;
+      if (supabase) {
+        const { data, error } = await supabase
+          .from("inventory_items")
+          .select("model_no,vehicle_model,hsn_no,chassis_no,motor_no,battery_no")
+          .order("created_at", { ascending: false })
+          .limit(200);
+        if (error) throw error;
+        matched =
+          data?.find(
+            (row: any) =>
+              (row.model_no || "").toLowerCase() === modelInput.toLowerCase() ||
+              (row.vehicle_model || "").toLowerCase() === modelInput.toLowerCase(),
+          ) || null;
+      } else {
+        const raw = localStorage.getItem("crm_inventory_items");
+        const list = raw ? JSON.parse(raw) : [];
+        matched =
+          list.find(
+            (row: any) =>
+              (row.modelNo || row.vehicleModel || "").toLowerCase() === modelInput.toLowerCase(),
+          ) || null;
+      }
+
+      if (!matched) {
+        setModelLookupMessage("No inventory data found for this model number.");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        productDescription: matched.vehicle_model || prev.productDescription,
+        hsnNo: matched.hsn_no || prev.hsnNo,
+        chassisNo: matched.chassis_no || prev.chassisNo,
+        motorNo: matched.motor_no || prev.motorNo,
+        batteryNo: matched.battery_no || prev.batteryNo,
+      }));
+      setModelLookupMessage("Fetched details from inventory.");
+    } catch (error) {
+      console.error("Error fetching model details from inventory:", error);
+      setModelLookupMessage("Failed to fetch model details.");
+    } finally {
+      setIsFetchingModelData(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -147,6 +215,29 @@ export default function CreateProjectModal({
 
           {/* Modal Body */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Customer Name */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">Model No. *</label>
+              <input
+                type="text"
+                name="modelNo"
+                value={formData.modelNo}
+                onChange={handleChange}
+                onBlur={() => void handleModelLookup()}
+                placeholder="Enter model number"
+                className={`w-full px-4 py-2 border rounded-lg bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                  errors.modelNo ? "border-destructive" : "border-border"
+                }`}
+              />
+              {errors.modelNo && <p className="text-sm text-destructive mt-1">{errors.modelNo}</p>}
+              {isFetchingModelData && (
+                <p className="text-xs text-muted-foreground mt-1">Fetching details from inventory...</p>
+              )}
+              {!isFetchingModelData && modelLookupMessage && (
+                <p className="text-xs text-muted-foreground mt-1">{modelLookupMessage}</p>
+              )}
+            </div>
+
             {/* Customer Name */}
             <div>
               <label className="block text-sm font-semibold mb-2">

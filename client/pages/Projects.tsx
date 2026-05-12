@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 
 export interface Project {
   id: string;
+  modelNo: string;
   customerName: string;
   contactNo: string;
   location: string;
@@ -49,6 +50,7 @@ export default function Projects() {
 
           const formattedProjects = data?.map((project: any) => ({
             id: project.id,
+            modelNo: project.model_no || "",
             customerName: project.customer_name,
             contactNo: project.contact_no,
             location: project.location,
@@ -87,6 +89,7 @@ export default function Projects() {
     try {
       const createdProject: Project = {
         id: `project_${Date.now()}`,
+        modelNo: newProject.modelNo || "",
         customerName: newProject.customerName,
         contactNo: newProject.contactNo,
         location: newProject.location,
@@ -112,6 +115,7 @@ export default function Projects() {
             .insert([
               {
                 user_id: userData.user.id,
+                model_no: newProject.modelNo || null,
                 customer_name: newProject.customerName,
                 contact_no: newProject.contactNo,
                 location: newProject.location,
@@ -130,6 +134,7 @@ export default function Projects() {
 
           const dbProject: Project = {
             id: data[0].id,
+            modelNo: data[0].model_no || "",
             customerName: data[0].customer_name,
             contactNo: data[0].contact_no,
             location: data[0].location,
@@ -172,6 +177,7 @@ export default function Projects() {
             .from('projects')
             .update({
               customer_name: updatedData.customerName,
+              model_no: updatedData.modelNo || null,
               contact_no: updatedData.contactNo,
               location: updatedData.location,
               product_description: updatedData.productDescription,
@@ -302,6 +308,9 @@ export default function Projects() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-6 py-4 text-left font-semibold text-foreground whitespace-nowrap">
+                      Model No.
+                    </th>
+                    <th className="px-6 py-4 text-left font-semibold text-foreground whitespace-nowrap">
                       Customer Name
                     </th>
                     <th className="px-6 py-4 text-left font-semibold text-foreground whitespace-nowrap">
@@ -345,6 +354,7 @@ export default function Projects() {
                       key={project.id}
                       className="border-b border-border hover:bg-muted/50 transition-colors"
                     >
+                      <td className="px-6 py-4 font-mono text-sm">{project.modelNo || "-"}</td>
                       <td className="px-6 py-4 font-medium">{project.customerName}</td>
                       <td className="px-6 py-4">{project.contactNo}</td>
                       <td className="px-6 py-4">{project.location}</td>

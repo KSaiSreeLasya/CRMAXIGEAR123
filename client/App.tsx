@@ -10,6 +10,9 @@ import Projects from "./pages/Projects";
 import Accounts from "./pages/Accounts";
 import EstimationSlip from "./pages/EstimationSlip";
 import Invoice from "./pages/Invoice";
+import Attendance from "./pages/Attendance";
+import Inventory from "./pages/Inventory";
+import AdminEmployees from "./pages/AdminEmployees";
 import NotFound from "./pages/NotFound";
 import { hydrateAuthTokenFromSupabase, isAuthenticated } from "./lib/auth";
 import { supabase } from "./lib/supabase";
@@ -32,6 +35,9 @@ function AppRoutes() {
         <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
         <Route path="/projects" element={<ProtectedRoute element={<Projects />} />} />
         <Route path="/accounts" element={<ProtectedRoute element={<Accounts />} />} />
+        <Route path="/attendance" element={<ProtectedRoute element={<Attendance />} />} />
+        <Route path="/inventory" element={<ProtectedRoute element={<Inventory />} />} />
+        <Route path="/admin-employees" element={<ProtectedRoute element={<AdminEmployees />} />} />
         <Route
           path="/estimation-slip/:estimationId"
           element={<ProtectedRoute element={<EstimationSlip />} />}
@@ -63,7 +69,10 @@ export const App = () => {
       if (session?.access_token) {
         localStorage.setItem("auth_token", session.access_token);
       } else {
-        localStorage.removeItem("auth_token");
+        const existingToken = localStorage.getItem("auth_token");
+        if (!existingToken?.startsWith("employee-")) {
+          localStorage.removeItem("auth_token");
+        }
       }
     });
 

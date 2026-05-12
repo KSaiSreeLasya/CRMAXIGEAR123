@@ -1,12 +1,30 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, LogOut } from "lucide-react";
-import { useState } from "react";
-import { logout } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import { getCurrentUser, getEmployeeSession, logout } from "@/lib/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileName, setProfileName] = useState("User");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    void (async () => {
+      const employeeSession = getEmployeeSession();
+      if (employeeSession?.employeeName) {
+        setProfileName(employeeSession.employeeName);
+        return;
+      }
+
+      const currentUser = await getCurrentUser();
+      if (currentUser?.user_metadata?.full_name) {
+        setProfileName(currentUser.user_metadata.full_name);
+        return;
+      }
+      setProfileName("Admin");
+    })();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -49,10 +67,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               Sales
             </Link>
+            <Link
+              to="/attendance"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Attendance
+            </Link>
+            <Link
+              to="/inventory"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Inventory
+            </Link>
+            <Link
+              to="/admin-employees"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Admin
+            </Link>
             <button
               onClick={handleLogout}
               className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-destructive"
             >
+              <span className="text-xs text-muted-foreground">{profileName}</span>
               <LogOut className="w-4 h-4" />
               Logout
             </button>
@@ -77,6 +114,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 Sales
               </Link>
+              <Link
+                to="/attendance"
+                className="text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Attendance
+              </Link>
+              <Link
+                to="/inventory"
+                className="text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Inventory
+              </Link>
+              <Link
+                to="/admin-employees"
+                className="text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Admin
+              </Link>
               <button
                 onClick={() => {
                   handleLogout();
@@ -84,6 +142,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }}
                 className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-destructive text-left"
               >
+                <span className="text-xs text-muted-foreground">{profileName}</span>
                 <LogOut className="w-4 h-4" />
                 Logout
               </button>

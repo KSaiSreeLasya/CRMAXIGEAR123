@@ -80,6 +80,7 @@ export default function Invoice() {
           if (!error && data) {
             const project: Project = {
               id: data.id,
+              modelNo: data.model_no || "",
               customerName: data.customer_name,
               contactNo: data.contact_no,
               location: data.location,

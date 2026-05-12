@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { Briefcase, Calculator } from "lucide-react";
+import { Briefcase, Calculator, CalendarCheck2, Boxes, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
@@ -14,7 +14,7 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 max-w-3xl">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl">
             <Link
               to="/projects"
               className="rounded-lg border border-border bg-card p-6 hover:border-primary hover:shadow-md transition-all"
@@ -44,6 +44,57 @@ export default function Dashboard() {
                   <h2 className="text-xl font-semibold">SALES</h2>
                   <p className="text-sm text-muted-foreground">
                     Create and manage estimation costs.
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              to="/attendance"
+              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-md bg-blue-100 p-3 text-blue-700">
+                  <CalendarCheck2 className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">ATTENDANCE</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Mark daily attendance and track status.
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              to="/inventory"
+              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-md bg-amber-100 p-3 text-amber-700">
+                  <Boxes className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">INVENTORY</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Manage vehicle stock, battery count and closing stock.
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              to="/admin-employees"
+              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-md bg-emerald-100 p-3 text-emerald-700">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">ADMIN</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Add and manage employees from one place.
                   </p>
                 </div>
               </div>
