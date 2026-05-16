@@ -65,32 +65,23 @@ export default function CreateProjectModal({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.modelNo.trim()) {
-      newErrors.modelNo = "Model number is required";
-    }
     if (!formData.customerName.trim()) {
       newErrors.customerName = "Customer name is required";
     }
     if (!formData.contactNo.trim()) {
       newErrors.contactNo = "Contact number is required";
     }
-    if (!formData.location.trim()) {
-      newErrors.location = "Location is required";
-    }
     if (!formData.productDescription.trim()) {
       newErrors.productDescription = "Product description is required";
     }
-    if (!formData.hsnNo.trim()) {
-      newErrors.hsnNo = "HSN number is required";
+    if (!formData.batteryCapacity.trim()) {
+      newErrors.batteryCapacity = "Battery capacity is required";
     }
-    if (!formData.chassisNo.trim()) {
-      newErrors.chassisNo = "Chassis number is required";
+    if (!formData.kmsRange.trim()) {
+      newErrors.kmsRange = "KM range is required";
     }
-    if (!formData.motorNo.trim()) {
-      newErrors.motorNo = "Motor number is required";
-    }
-    if (!formData.batteryNo.trim()) {
-      newErrors.batteryNo = "Battery number is required";
+    if (!formData.speed.trim()) {
+      newErrors.speed = "Speed is required";
     }
     if (!formData.invoiceDate.trim()) {
       newErrors.invoiceDate = "Invoice date is required";
@@ -230,9 +221,9 @@ export default function CreateProjectModal({
 
           {/* Modal Body */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Customer Name */}
+            {/* Model No */}
             <div>
-              <label className="block text-sm font-semibold mb-2">Model No. *</label>
+              <label className="block text-sm font-semibold mb-2">Model No.</label>
               <input
                 type="text"
                 name="modelNo"
@@ -300,7 +291,7 @@ export default function CreateProjectModal({
             {/* Location */}
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Location *
+                Location
               </label>
               <input
                 type="text"
@@ -346,7 +337,7 @@ export default function CreateProjectModal({
             {/* HSN No */}
             <div>
               <label className="block text-sm font-semibold mb-2">
-                HSN No. *
+                HSN No.
               </label>
               <input
                 type="text"
@@ -366,7 +357,7 @@ export default function CreateProjectModal({
             {/* Chassis No */}
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Chassis No. *
+                Chassis No.
               </label>
               <input
                 type="text"
@@ -383,10 +374,10 @@ export default function CreateProjectModal({
               )}
             </div>
 
-            {/* Amount */}
+            {/* Motor No */}
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Motor No. *
+                Motor No.
               </label>
               <input
                 type="text"
@@ -405,7 +396,7 @@ export default function CreateProjectModal({
 
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Battery No. *
+                Battery No.
               </label>
               <input
                 type="text"
@@ -429,7 +420,7 @@ export default function CreateProjectModal({
   {/* Battery Warranty */}
   <div>
     <label className="block text-sm font-semibold mb-2">
-      Battery warranty *
+      Battery warranty
     </label>
 
     <input
@@ -452,37 +443,58 @@ export default function CreateProjectModal({
     )}
   </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Battery capacity</label>
+                <label className="block text-sm font-semibold mb-2">Battery capacity *</label>
                 <input
                   type="text"
                   name="batteryCapacity"
                   value={formData.batteryCapacity}
                   onChange={handleChange}
                   placeholder="e.g. 3.5 kWh"
-                  className="w-full px-4 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  className={`w-full px-4 py-2 border rounded-lg bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.batteryCapacity ? "border-destructive" : "border-border"
+                  }`}
                 />
+                {errors.batteryCapacity && (
+                  <p className="text-sm text-destructive mt-1">
+                    {errors.batteryCapacity}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">KM range</label>
+                <label className="block text-sm font-semibold mb-2">KM range *</label>
                 <input
                   type="text"
                   name="kmsRange"
                   value={formData.kmsRange}
                   onChange={handleChange}
                   placeholder="e.g. 120 km"
-                  className="w-full px-4 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  className={`w-full px-4 py-2 border rounded-lg bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.kmsRange ? "border-destructive" : "border-border"
+                  }`}
                 />
+                {errors.kmsRange && (
+                  <p className="text-sm text-destructive mt-1">
+                    {errors.kmsRange}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Speed</label>
+                <label className="block text-sm font-semibold mb-2">Speed *</label>
                 <input
                   type="text"
                   name="speed"
                   value={formData.speed}
                   onChange={handleChange}
                   placeholder="e.g. 65 km/h"
-                  className="w-full px-4 py-2 border rounded-lg bg-background border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  className={`w-full px-4 py-2 border rounded-lg bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.speed ? "border-destructive" : "border-border"
+                  }`}
                 />
+                {errors.speed && (
+                  <p className="text-sm text-destructive mt-1">
+                    {errors.speed}
+                  </p>
+                )}
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-semibold mb-2">Vehicle warranty</label>
