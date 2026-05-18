@@ -151,27 +151,31 @@ export default function Inventory() {
     setIsLoadingSpares(true);
     try {
       if (supabase) {
-        const { data, error } = await supabase
-          .from("spares_inventory")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        const rows: SpareItem[] =
-          data?.map((row: any) => ({
-            id: row.id,
-            partName: row.part_name || "",
-            price: row.price || 0,
-            qty: row.qty || 0,
-            total: row.total || 0,
-            createdAt: new Date(row.created_at).toLocaleDateString(),
-          })) || [];
-        setSpares(rows);
-      } else {
-        const raw = localStorage.getItem("crm_spares_inventory");
-        if (raw) setSpares(JSON.parse(raw));
+        try {
+          const { data, error } = await supabase
+            .from("spares_inventory")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          const rows: SpareItem[] =
+            data?.map((row: any) => ({
+              id: row.id,
+              partName: row.part_name || "",
+              price: row.price || 0,
+              qty: row.qty || 0,
+              total: row.total || 0,
+              createdAt: new Date(row.created_at).toLocaleDateString(),
+            })) || [];
+          setSpares(rows);
+          return;
+        } catch (supabaseError: any) {
+          console.warn("Supabase spares load failed (table may not exist), falling back to localStorage:", supabaseError?.message);
+        }
       }
+      const raw = localStorage.getItem("crm_spares_inventory");
+      if (raw) setSpares(JSON.parse(raw));
     } catch (error) {
-      console.error("Error loading spares:", error);
+      console.error("Error loading spares from localStorage:", error);
     } finally {
       setIsLoadingSpares(false);
     }
@@ -181,29 +185,33 @@ export default function Inventory() {
     setIsLoadingEstimations(true);
     try {
       if (supabase) {
-        const { data, error } = await supabase
-          .from("estimations")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        const rows: EstimationRecord[] =
-          data?.map((row: any) => ({
-            id: row.id,
-            estimationSlipNo: row.estimation_slip_no || "",
-            customerName: row.customer_name || "",
-            contactNo: row.contact_no || "",
-            estimationDate: row.estimation_date || "",
-            model: row.model || "",
-            amount: row.amount || 0,
-            createdAt: new Date(row.created_at).toLocaleDateString(),
-          })) || [];
-        setEstimations(rows);
-      } else {
-        const raw = localStorage.getItem("crm_estimations");
-        if (raw) setEstimations(JSON.parse(raw));
+        try {
+          const { data, error } = await supabase
+            .from("estimations")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          const rows: EstimationRecord[] =
+            data?.map((row: any) => ({
+              id: row.id,
+              estimationSlipNo: row.estimation_slip_no || "",
+              customerName: row.customer_name || "",
+              contactNo: row.contact_no || "",
+              estimationDate: row.estimation_date || "",
+              model: row.model || "",
+              amount: row.amount || 0,
+              createdAt: new Date(row.created_at).toLocaleDateString(),
+            })) || [];
+          setEstimations(rows);
+          return;
+        } catch (supabaseError: any) {
+          console.warn("Supabase estimations load failed, falling back to localStorage:", supabaseError?.message);
+        }
       }
+      const raw = localStorage.getItem("crm_estimations");
+      if (raw) setEstimations(JSON.parse(raw));
     } catch (error) {
-      console.error("Error loading estimations:", error);
+      console.error("Error loading estimations from localStorage:", error);
     } finally {
       setIsLoadingEstimations(false);
     }
@@ -415,37 +423,50 @@ export default function Inventory() {
         setSpares(updated);
         localStorage.setItem("crm_spares_inventory", JSON.stringify(updated));
       } else {
+        let created: SpareItem;
         if (supabase) {
-          const { data: userData } = await supabase.auth.getUser();
-          if (!userData.user?.id) {
-            throw new Error("User not authenticated");
-          }
-          const { data, error } = await supabase
-            .from("spares_inventory")
-            .insert([
-              {
-                user_id: userData.user.id,
-                part_name: payload.partName,
-                price: payload.price,
-                qty: payload.qty,
-                total: payload.total,
-              },
-            ])
-            .select()
-            .single();
-          if (error) throw error;
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            if (!userData.user?.id) {
+              throw new Error("User not authenticated");
+            }
+            const { data, error } = await supabase
+              .from("spares_inventory")
+              .insert([
+                {
+                  user_id: userData.user.id,
+                  part_name: payload.partName,
+                  price: payload.price,
+                  qty: payload.qty,
+                  total: payload.total,
+                },
+              ])
+              .select()
+              .single();
+            if (error) throw error;
 
-          const created: SpareItem = {
-            id: data.id,
-            partName: data.part_name,
-            price: data.price,
-            qty: data.qty,
-            total: data.total,
-            createdAt: new Date(data.created_at).toLocaleDateString(),
-          };
-          setSpares((prev) => [created, ...prev]);
+            created = {
+              id: data.id,
+              partName: data.part_name,
+              price: data.price,
+              qty: data.qty,
+              total: data.total,
+              createdAt: new Date(data.created_at).toLocaleDateString(),
+            };
+            setSpares((prev) => [created, ...prev]);
+          } catch (supabaseError: any) {
+            console.warn("Supabase insert failed, using localStorage:", supabaseError?.message);
+            created = {
+              id: `spare_${Date.now()}`,
+              createdAt: new Date().toLocaleDateString(),
+              ...payload,
+            };
+            const updated = [created, ...spares];
+            setSpares(updated);
+            localStorage.setItem("crm_spares_inventory", JSON.stringify(updated));
+          }
         } else {
-          const created: SpareItem = {
+          created = {
             id: `spare_${Date.now()}`,
             createdAt: new Date().toLocaleDateString(),
             ...payload,
@@ -470,8 +491,12 @@ export default function Inventory() {
     if (!window.confirm("Delete this spare item?")) return;
     try {
       if (supabase) {
-        const { error } = await supabase.from("spares_inventory").delete().eq("id", id);
-        if (error) throw error;
+        try {
+          const { error } = await supabase.from("spares_inventory").delete().eq("id", id);
+          if (error) throw error;
+        } catch (supabaseError: any) {
+          console.warn("Supabase delete failed, using localStorage only:", supabaseError?.message);
+        }
       }
       const updated = spares.filter((item) => item.id !== id);
       setSpares(updated);
@@ -514,18 +539,22 @@ export default function Inventory() {
 
       if (editingEstimationId) {
         if (supabase) {
-          const { error } = await supabase
-            .from("estimations")
-            .update({
-              estimation_slip_no: payload.estimationSlipNo,
-              customer_name: payload.customerName,
-              contact_no: payload.contactNo,
-              estimation_date: payload.estimationDate,
-              model: payload.model,
-              amount: payload.amount,
-            })
-            .eq("id", editingEstimationId);
-          if (error) throw error;
+          try {
+            const { error } = await supabase
+              .from("estimations")
+              .update({
+                estimation_slip_no: payload.estimationSlipNo,
+                customer_name: payload.customerName,
+                contact_no: payload.contactNo,
+                estimation_date: payload.estimationDate,
+                model: payload.model,
+                amount: payload.amount,
+              })
+              .eq("id", editingEstimationId);
+            if (error) throw error;
+          } catch (supabaseError: any) {
+            console.warn("Supabase update failed, using localStorage only:", supabaseError?.message);
+          }
         }
 
         const updated = estimations.map((item) =>
@@ -539,41 +568,54 @@ export default function Inventory() {
         setEstimations(updated);
         localStorage.setItem("crm_estimations", JSON.stringify(updated));
       } else {
+        let created: EstimationRecord;
         if (supabase) {
-          const { data: userData } = await supabase.auth.getUser();
-          if (!userData.user?.id) {
-            throw new Error("User not authenticated");
-          }
-          const { data, error } = await supabase
-            .from("estimations")
-            .insert([
-              {
-                user_id: userData.user.id,
-                estimation_slip_no: payload.estimationSlipNo,
-                customer_name: payload.customerName,
-                contact_no: payload.contactNo,
-                estimation_date: payload.estimationDate,
-                model: payload.model,
-                amount: payload.amount,
-              },
-            ])
-            .select()
-            .single();
-          if (error) throw error;
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            if (!userData.user?.id) {
+              throw new Error("User not authenticated");
+            }
+            const { data, error } = await supabase
+              .from("estimations")
+              .insert([
+                {
+                  user_id: userData.user.id,
+                  estimation_slip_no: payload.estimationSlipNo,
+                  customer_name: payload.customerName,
+                  contact_no: payload.contactNo,
+                  estimation_date: payload.estimationDate,
+                  model: payload.model,
+                  amount: payload.amount,
+                },
+              ])
+              .select()
+              .single();
+            if (error) throw error;
 
-          const created: EstimationRecord = {
-            id: data.id,
-            estimationSlipNo: data.estimation_slip_no,
-            customerName: data.customer_name,
-            contactNo: data.contact_no,
-            estimationDate: data.estimation_date,
-            model: data.model,
-            amount: data.amount,
-            createdAt: new Date(data.created_at).toLocaleDateString(),
-          };
-          setEstimations((prev) => [created, ...prev]);
+            created = {
+              id: data.id,
+              estimationSlipNo: data.estimation_slip_no,
+              customerName: data.customer_name,
+              contactNo: data.contact_no,
+              estimationDate: data.estimation_date,
+              model: data.model,
+              amount: data.amount,
+              createdAt: new Date(data.created_at).toLocaleDateString(),
+            };
+            setEstimations((prev) => [created, ...prev]);
+          } catch (supabaseError: any) {
+            console.warn("Supabase insert failed, using localStorage:", supabaseError?.message);
+            created = {
+              id: `estimation_${Date.now()}`,
+              createdAt: new Date().toLocaleDateString(),
+              ...payload,
+            };
+            const updated = [created, ...estimations];
+            setEstimations(updated);
+            localStorage.setItem("crm_estimations", JSON.stringify(updated));
+          }
         } else {
-          const created: EstimationRecord = {
+          created = {
             id: `estimation_${Date.now()}`,
             createdAt: new Date().toLocaleDateString(),
             ...payload,
@@ -598,8 +640,12 @@ export default function Inventory() {
     if (!window.confirm("Delete this estimation?")) return;
     try {
       if (supabase) {
-        const { error } = await supabase.from("estimations").delete().eq("id", id);
-        if (error) throw error;
+        try {
+          const { error } = await supabase.from("estimations").delete().eq("id", id);
+          if (error) throw error;
+        } catch (supabaseError: any) {
+          console.warn("Supabase delete failed, using localStorage only:", supabaseError?.message);
+        }
       }
       const updated = estimations.filter((item) => item.id !== id);
       setEstimations(updated);
