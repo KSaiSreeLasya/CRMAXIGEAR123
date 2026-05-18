@@ -16,6 +16,7 @@ import AdminEmployees from "./pages/AdminEmployees";
 import NotFound from "./pages/NotFound";
 import { hydrateAuthTokenFromSupabase, isAuthenticated } from "./lib/auth";
 import { supabase } from "./lib/supabase";
+import { useCanonicalUrl } from "./lib/seo";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,8 @@ const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
 };
 
 function AppRoutes() {
+  useCanonicalUrl();
+
   return (
     <BrowserRouter>
       <Routes>

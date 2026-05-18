@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import type { Project } from "@/pages/Projects";
@@ -27,8 +27,6 @@ export default function CreateProjectModal({
     batteryNo: "",
     batteryWarranty: "",
     batteryCapacity: "",
-    kmsRange: "",
-    speed: "",
     vehicleWarranty: "",
     invoiceDate: "",
     amount: "",
@@ -39,6 +37,15 @@ export default function CreateProjectModal({
   const [modelLookupMessage, setModelLookupMessage] = useState("");
   const [availableChassisNumbers, setAvailableChassisNumbers] = useState<string[]>([]);
   const [showChassisDropdown, setShowChassisDropdown] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setErrors({});
+      setModelLookupMessage("");
+      setAvailableChassisNumbers([]);
+      setShowChassisDropdown(false);
+    }
+  }, [isOpen]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -79,12 +86,6 @@ export default function CreateProjectModal({
     if (!formData.batteryCapacity.trim()) {
       newErrors.batteryCapacity = "Battery capacity is required";
     }
-    if (!formData.kmsRange.trim()) {
-      newErrors.kmsRange = "KM range is required";
-    }
-    if (!formData.speed.trim()) {
-      newErrors.speed = "Speed is required";
-    }
     if (!formData.invoiceDate.trim()) {
       newErrors.invoiceDate = "Invoice date is required";
     }
@@ -117,8 +118,6 @@ export default function CreateProjectModal({
       batteryNo: formData.batteryNo,
       batteryWarranty: formData.batteryWarranty,
       batteryCapacity: formData.batteryCapacity,
-      kmsRange: formData.kmsRange,
-      speed: formData.speed,
       vehicleWarranty: formData.vehicleWarranty,
       invoiceDate: formData.invoiceDate,
       amount: parseFloat(formData.amount),
@@ -137,8 +136,6 @@ export default function CreateProjectModal({
       batteryNo: "",
       batteryWarranty: "",
       batteryCapacity: "",
-      kmsRange: "",
-      speed: "",
       vehicleWarranty: "",
       invoiceDate: "",
       amount: "",
@@ -496,42 +493,6 @@ export default function CreateProjectModal({
                 {errors.batteryCapacity && (
                   <p className="text-sm text-destructive mt-1">
                     {errors.batteryCapacity}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">KM range *</label>
-                <input
-                  type="text"
-                  name="kmsRange"
-                  value={formData.kmsRange}
-                  onChange={handleChange}
-                  placeholder="e.g. 120 km"
-                  className={`w-full px-4 py-2 border rounded-lg bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                    errors.kmsRange ? "border-destructive" : "border-border"
-                  }`}
-                />
-                {errors.kmsRange && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.kmsRange}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">Speed *</label>
-                <input
-                  type="text"
-                  name="speed"
-                  value={formData.speed}
-                  onChange={handleChange}
-                  placeholder="e.g. 65 km/h"
-                  className={`w-full px-4 py-2 border rounded-lg bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                    errors.speed ? "border-destructive" : "border-border"
-                  }`}
-                />
-                {errors.speed && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.speed}
                   </p>
                 )}
               </div>

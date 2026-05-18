@@ -91,8 +91,6 @@ export default function Invoice() {
               batteryNo: data.battery_no || "",
               batteryWarranty: data.battery_warranty || "",
               batteryCapacity: data.battery_capacity || "",
-              kmsRange: data.kms_range || "",
-              speed: data.speed || "",
               vehicleWarranty: data.vehicle_warranty || "",
               invoiceDate: data.invoice_date || "",
               amount: data.amount,
@@ -116,8 +114,6 @@ export default function Invoice() {
             ...foundProject,
             batteryWarranty: foundProject.batteryWarranty ?? "",
             batteryCapacity: foundProject.batteryCapacity ?? "",
-            kmsRange: foundProject.kmsRange ?? "",
-            speed: foundProject.speed ?? "",
             vehicleWarranty: foundProject.vehicleWarranty ?? "",
           });
         }

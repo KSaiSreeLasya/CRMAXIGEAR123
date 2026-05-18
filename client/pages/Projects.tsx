@@ -20,8 +20,6 @@ export interface Project {
   batteryNo: string;
   batteryWarranty: string;
   batteryCapacity: string;
-  kmsRange: string;
-  speed: string;
   vehicleWarranty: string;
   invoiceDate: string;
   amount: number;
@@ -66,8 +64,6 @@ export default function Projects() {
             batteryNo: project.battery_no || "",
             batteryWarranty: project.battery_warranty || "",
             batteryCapacity: project.battery_capacity || "",
-            kmsRange: project.kms_range || "",
-            speed: project.speed || "",
             vehicleWarranty: project.vehicle_warranty || "",
             invoiceDate: project.invoice_date || "",
             amount: project.amount,
@@ -91,8 +87,6 @@ export default function Projects() {
             ...p,
             batteryWarranty: p.batteryWarranty ?? "",
             batteryCapacity: p.batteryCapacity ?? "",
-            kmsRange: p.kmsRange ?? "",
-            speed: p.speed ?? "",
             vehicleWarranty: p.vehicleWarranty ?? "",
           })),
         );
@@ -120,8 +114,6 @@ export default function Projects() {
         batteryNo: newProject.batteryNo,
         batteryWarranty: newProject.batteryWarranty,
         batteryCapacity: newProject.batteryCapacity,
-        kmsRange: newProject.kmsRange,
-        speed: newProject.speed,
         vehicleWarranty: newProject.vehicleWarranty,
         invoiceDate: newProject.invoiceDate,
         amount: newProject.amount,
@@ -151,8 +143,6 @@ export default function Projects() {
                 battery_no: newProject.batteryNo,
                 battery_warranty: newProject.batteryWarranty || null,
                 battery_capacity: newProject.batteryCapacity || null,
-                kms_range: newProject.kmsRange || null,
-                speed: newProject.speed || null,
                 vehicle_warranty: newProject.vehicleWarranty || null,
                 invoice_date: newProject.invoiceDate,
                 amount: newProject.amount,
@@ -175,8 +165,6 @@ export default function Projects() {
             batteryNo: data[0].battery_no || "",
             batteryWarranty: data[0].battery_warranty || "",
             batteryCapacity: data[0].battery_capacity || "",
-            kmsRange: data[0].kms_range || "",
-            speed: data[0].speed || "",
             vehicleWarranty: data[0].vehicle_warranty || "",
             invoiceDate: data[0].invoice_date || "",
             amount: data[0].amount,
@@ -222,8 +210,6 @@ export default function Projects() {
               battery_no: updatedData.batteryNo,
               battery_warranty: updatedData.batteryWarranty || null,
               battery_capacity: updatedData.batteryCapacity || null,
-              kms_range: updatedData.kmsRange || null,
-              speed: updatedData.speed || null,
               vehicle_warranty: updatedData.vehicleWarranty || null,
               invoice_date: updatedData.invoiceDate,
               amount: updatedData.amount,

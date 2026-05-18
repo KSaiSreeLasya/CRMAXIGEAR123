@@ -28,20 +28,36 @@ export default defineConfig(({ mode }) => ({
 function expressPlugin(): Plugin {
   return {
     name: "express-plugin",
-    apply: "serve", // Only apply during development (serve mode)
+    apply: "serve",
     configureServer(server) {
       const app = createServer();
 
-      // Only forward /api/* to Express. Mounting the full app on every path breaks SPA
-      // refresh (e.g. /projects) because Express returns 404 before Vite serves index.html.
-      server.middlewares.use((req, res, next) => {
-        const pathname = req.url?.split("?")[0] ?? "";
-        if (pathname.startsWith("/api")) {
-          app(req, res, next);
-        } else {
-          next();
-        }
-      });
+      return () => {
+        // Forward API routes to Express server
+        server.middlewares.use((req, res, next) => {
+          const pathname = (req.url?.split("?")[0] ?? "") as string;
+          if (pathname.startsWith("/api")) {
+            app(req as any, res as any, next);
+          } else {
+            next();
+          }
+        });
+
+        // SPA fallback: serve index.html for non-file requests
+        server.middlewares.use((req, res, next) => {
+          const pathname = (req.url?.split("?")[0] ?? "") as string;
+          // Check if this looks like a file (has an extension)
+          if (pathname.includes(".")) {
+            next();
+          } else if (!pathname.startsWith("/api")) {
+            // For non-API, non-file paths, let Vite serve index.html for React routing
+            req.url = "/index.html";
+            next();
+          } else {
+            next();
+          }
+        });
+      };
     },
   };
 }
