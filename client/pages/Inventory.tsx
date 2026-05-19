@@ -601,7 +601,7 @@ export default function Inventory() {
               <h2 className="text-xl font-semibold mb-4">
                 {editingSpareId ? "Edit Spare Item" : "Add Spare Item"}
               </h2>
-              <form onSubmit={handleSaveSpare} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <form onSubmit={handleSaveSpare} className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <input
                   className="px-4 py-2 border border-border rounded-lg bg-background"
                   placeholder="Part Name"
@@ -626,6 +626,9 @@ export default function Inventory() {
                   onChange={(e) => setSpareForm((prev) => ({ ...prev, qty: e.target.value }))}
                   required
                 />
+                <div className="px-4 py-2 border border-border rounded-lg bg-muted flex items-center">
+                  <span className="text-sm font-medium">Total: ₹{(parseFloat(spareForm.price) * parseInt(spareForm.qty) || 0).toFixed(2)}</span>
+                </div>
                 <button
                   type="submit"
                   disabled={isSavingSpare}
