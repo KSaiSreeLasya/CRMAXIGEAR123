@@ -30,6 +30,42 @@ const DEFAULT_FORM = {
   amount: "",
 };
 
+function getNextServiceInvoiceNumber(): string {
+  const defaultInvoiceNo = "SRV/2026-27/001";
+  let maxInvoiceNo = defaultInvoiceNo;
+  let maxNumericSuffix = 0;
+
+  try {
+    const saved = localStorage.getItem("crm_service_invoices");
+    if (saved) {
+      const invoices = JSON.parse(saved) as ServiceInvoiceRecord[];
+      invoices.forEach((inv) => {
+        const invoice = inv.serviceInvoiceNo?.trim();
+        if (!invoice) return;
+
+        const match = invoice.match(/^(.*?)(\d+)$/);
+        if (!match) return;
+        const numericValue = Number(match[2]);
+        if (Number.isNaN(numericValue)) return;
+
+        if (numericValue > maxNumericSuffix) {
+          maxNumericSuffix = numericValue;
+          maxInvoiceNo = invoice;
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error deriving next service invoice number:", error);
+  }
+
+  const lastMatch = maxInvoiceNo.match(/^(.*?)(\d+)$/);
+  if (!lastMatch) return defaultInvoiceNo;
+  const prefix = lastMatch[1];
+  const width = lastMatch[2].length;
+  const nextValue = String(Number(lastMatch[2]) + 1).padStart(width, "0");
+  return `${prefix}${nextValue}`;
+}
+
 export default function ServiceInvoice() {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState<ServiceInvoiceRecord[]>([]);
@@ -42,7 +78,14 @@ export default function ServiceInvoice() {
 
   useEffect(() => {
     void loadInvoices();
-  }, []);
+    // Auto-set invoice number when not editing
+    if (!editingId) {
+      setForm((prev) => ({
+        ...prev,
+        serviceInvoiceNo: getNextServiceInvoiceNumber(),
+      }));
+    }
+  }, [editingId]);
 
   const loadInvoices = async () => {
     setIsLoading(true);
@@ -299,11 +342,11 @@ export default function ServiceInvoice() {
           </h2>
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Invoice No (e.g., SRV/2026-27/001)"
+              className="px-4 py-2 border border-border rounded-lg bg-background text-gray-500 cursor-not-allowed"
+              placeholder="Auto-generated"
               value={form.serviceInvoiceNo}
-              onChange={(e) => setForm((prev) => ({ ...prev, serviceInvoiceNo: e.target.value }))}
-              required
+              readOnly
+              disabled
             />
             <input
               className="px-4 py-2 border border-border rounded-lg bg-background"
