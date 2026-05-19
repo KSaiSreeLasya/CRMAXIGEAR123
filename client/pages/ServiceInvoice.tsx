@@ -196,7 +196,7 @@ export default function ServiceInvoice() {
         location: form.location.trim(),
         product: form.product.trim(),
         productDescription: form.productDescription.trim(),
-        invoiceDate: form.invoiceDate,
+        invoiceDate: form.invoiceDate || new Date().toISOString().split('T')[0],
         amount,
         unit,
         total,
@@ -496,7 +496,7 @@ export default function ServiceInvoice() {
               ) : (
                 spares.map((spare) => (
                   <option key={spare.id} value={spare.partName}>
-                    {spare.partName} - Qty: {spare.qty} - ₹{spare.price.toFixed(2)}
+                    {spare.partName}
                   </option>
                 ))
               )}
@@ -513,6 +513,7 @@ export default function ServiceInvoice() {
               type="date"
               value={form.invoiceDate}
               onChange={(e) => setForm((prev) => ({ ...prev, invoiceDate: e.target.value }))}
+              required
             />
             <input
               className="px-4 py-2 border border-border rounded-lg bg-background"

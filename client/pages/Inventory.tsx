@@ -128,20 +128,46 @@ export default function Inventory() {
     try {
       if (supabase) {
         try {
-          const { data, error } = await supabase
+          const { data: sparesData, error: sparesError } = await supabase
             .from("spares_inventory")
             .select("*")
             .order("created_at", { ascending: false });
-          if (error) throw error;
+          if (sparesError) throw sparesError;
+
+          // Fetch sold units from service invoices
+          const { data: invoicesData, error: invoicesError } = await supabase
+            .from("service_invoices")
+            .select("product, unit");
+
+          if (invoicesError) {
+            console.warn("Could not load service invoices for sold qty calculation:", invoicesError?.message);
+          }
+
+          // Calculate sold units per product
+          const soldUnits: Record<string, number> = {};
+          if (invoicesData) {
+            invoicesData.forEach((inv: any) => {
+              const product = inv.product || "";
+              soldUnits[product] = (soldUnits[product] || 0) + (inv.unit || 0);
+            });
+          }
+
           const rows: SpareItem[] =
-            data?.map((row: any) => ({
-              id: row.id,
-              partName: row.part_name || "",
-              price: row.price || 0,
-              qty: row.qty || 0,
-              total: row.total || 0,
-              createdAt: new Date(row.created_at).toLocaleDateString(),
-            })) || [];
+            sparesData?.map((row: any) => {
+              const partName = row.part_name || "";
+              const stockQty = row.qty || 0;
+              const soldQty = soldUnits[partName] || 0;
+              const remainingQty = Math.max(0, stockQty - soldQty);
+
+              return {
+                id: row.id,
+                partName: partName,
+                price: row.price || 0,
+                qty: remainingQty,
+                total: row.total || 0,
+                createdAt: new Date(row.created_at).toLocaleDateString(),
+              };
+            }) || [];
           setSpares(rows);
           return;
         } catch (supabaseError: any) {
@@ -344,7 +370,6 @@ export default function Inventory() {
               part_name: payload.partName,
               price: payload.price,
               qty: payload.qty,
-              total: payload.total,
             })
             .eq("id", editingSpareId);
           if (error) throw error;
@@ -379,7 +404,6 @@ export default function Inventory() {
                   part_name: payload.partName,
                   price: payload.price,
                   qty: payload.qty,
-                  total: payload.total,
                 },
               ])
               .select()
@@ -601,7 +625,7 @@ export default function Inventory() {
               <h2 className="text-xl font-semibold mb-4">
                 {editingSpareId ? "Edit Spare Item" : "Add Spare Item"}
               </h2>
-              <form onSubmit={handleSaveSpare} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <form onSubmit={handleSaveSpare} className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <input
                   className="px-4 py-2 border border-border rounded-lg bg-background"
                   placeholder="Part Name"
@@ -626,6 +650,9 @@ export default function Inventory() {
                   onChange={(e) => setSpareForm((prev) => ({ ...prev, qty: e.target.value }))}
                   required
                 />
+                <div className="px-4 py-2 border border-border rounded-lg bg-muted flex items-center">
+                  <span className="text-sm font-medium">Total: ₹{(parseFloat(spareForm.price) * parseInt(spareForm.qty) || 0).toFixed(2)}</span>
+                </div>
                 <button
                   type="submit"
                   disabled={isSavingSpare}
@@ -646,7 +673,10 @@ export default function Inventory() {
             </div>
 
             <div className="bg-card rounded-lg border border-border p-6">
-              <h2 className="text-xl font-semibold mb-4">Spares Inventory</h2>
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold mb-2">Spares Inventory</h2>
+                <p className="text-xs text-muted-foreground">Quantity shown is remaining stock (after deducting sold units from service invoices)</p>
+              </div>
               {isLoadingSpares ? (
                 <p className="text-muted-foreground">Loading spares...</p>
               ) : spares.length === 0 ? (
