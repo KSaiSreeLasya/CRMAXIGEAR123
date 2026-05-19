@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Accounts from "./pages/Accounts";
+import Sales from "./pages/Sales";
+import ServiceInvoice from "./pages/ServiceInvoice";
 import EstimationSlip from "./pages/EstimationSlip";
 import Invoice from "./pages/Invoice";
 import Attendance from "./pages/Attendance";
@@ -37,6 +39,8 @@ function AppRoutesContent() {
       <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
       <Route path="/projects" element={<ProtectedRoute element={<Projects />} />} />
       <Route path="/accounts" element={<ProtectedRoute element={<Accounts />} />} />
+      <Route path="/sales" element={<ProtectedRoute element={<Sales />} />} />
+      <Route path="/service-invoice" element={<ProtectedRoute element={<ServiceInvoice />} />} />
       <Route path="/attendance" element={<ProtectedRoute element={<Attendance />} />} />
       <Route path="/inventory" element={<ProtectedRoute element={<Inventory />} />} />
       <Route path="/admin-employees" element={<ProtectedRoute element={<AdminEmployees />} />} />

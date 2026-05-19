@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { Briefcase, CalendarCheck2, Boxes, ShieldCheck } from "lucide-react";
+import { Briefcase, CalendarCheck2, Boxes, ShieldCheck, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
@@ -61,6 +61,23 @@ export default function Dashboard() {
                   <h2 className="text-xl font-semibold">INVENTORY</h2>
                   <p className="text-sm text-muted-foreground">
                     Manage vehicle stock, battery count and closing stock.
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              to="/service-invoice"
+              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-md bg-orange-100 p-3 text-orange-700">
+                  <Wrench className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">SERVICE</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Create and manage service invoices with PDF export.
                   </p>
                 </div>
               </div>

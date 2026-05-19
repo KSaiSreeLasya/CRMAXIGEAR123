@@ -56,16 +56,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              to="/projects"
+              to="/sales"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Sales
             </Link>
             <Link
-              to="/accounts"
+              to="/projects"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
-              Estimation cost
+              Projects
+            </Link>
+            <Link
+              to="/service-invoice"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Service Invoices
             </Link>
             <Link
               to="/attendance"
@@ -101,18 +107,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="md:hidden border-t border-border bg-background">
             <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
               <Link
-                to="/projects"
+                to="/sales"
                 className="text-sm font-medium transition-colors hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Sales
               </Link>
               <Link
-                to="/accounts"
+                to="/projects"
                 className="text-sm font-medium transition-colors hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Estimation cost
+                Projects
+              </Link>
+              <Link
+                to="/service-invoice"
+                className="text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Service Invoices
               </Link>
               <Link
                 to="/attendance"
