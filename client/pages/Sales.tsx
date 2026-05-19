@@ -47,7 +47,10 @@ export default function Sales() {
             .from("estimations")
             .select("*")
             .order("created_at", { ascending: false });
-          if (error) throw error;
+          if (error) {
+            console.warn("Supabase error:", error.message);
+            throw error;
+          }
           const rows: EstimationRecord[] =
             data?.map((row: any) => ({
               id: row.id,

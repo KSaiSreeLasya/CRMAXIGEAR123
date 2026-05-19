@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getEmployeeSession } from "@/lib/auth";
+import AdminPasswordDialog from "@/components/AdminPasswordDialog";
 
 interface Employee {
   id: string;
@@ -30,6 +32,10 @@ export default function AdminEmployees() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const employeeSession = getEmployeeSession();
+  const isAdmin = !employeeSession;
+  const [passwordVerified, setPasswordVerified] = useState(isAdmin);
 
   useEffect(() => {
     void loadEmployees();
@@ -214,6 +220,17 @@ export default function AdminEmployees() {
     setEditingId(null);
     setForm(DEFAULT_FORM);
   };
+
+  if (!passwordVerified) {
+    return (
+      <Layout>
+        <AdminPasswordDialog
+          isOpen={true}
+          onSuccess={() => setPasswordVerified(true)}
+        />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

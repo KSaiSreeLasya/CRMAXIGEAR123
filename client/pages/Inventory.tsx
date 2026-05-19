@@ -91,35 +91,39 @@ export default function Inventory() {
     setIsLoading(true);
     try {
       if (supabase) {
-        const { data, error } = await supabase
-          .from("inventory_items")
-          .select("*")
-          .order("sl_no", { ascending: true });
-        if (error) throw error;
-        const rows: InventoryItem[] =
-          data?.map((row: any) => ({
-            id: row.id,
-            slNo: row.sl_no,
-            modelNo: row.model_no || "",
-            brand: row.brand || "",
-            vehicleModel: row.vehicle_model || "",
-            hsnNo: row.hsn_no || "",
-            vehicleCount: row.vehicle_count || 0,
-            chassisNo: row.chassis_no || "",
-            motorNo: row.motor_no || "",
-            batteryNo: row.battery_no || "",
-            manufacturerInvNo: row.manufacturer_inv_no || "",
-            batteryModel: row.battery_model || "",
-            batteryCount: row.battery_count || 0,
-            salesCount: row.sales_count || 0,
-            closingStock: row.closing_stock || 0,
-            createdAt: new Date(row.created_at).toLocaleDateString(),
-          })) || [];
-        setItems(rows);
-      } else {
-        const raw = localStorage.getItem("crm_inventory_items");
-        if (raw) setItems(JSON.parse(raw));
+        try {
+          const { data, error } = await supabase
+            .from("inventory_items")
+            .select("*")
+            .order("sl_no", { ascending: true });
+          if (error) throw error;
+          const rows: InventoryItem[] =
+            data?.map((row: any) => ({
+              id: row.id,
+              slNo: row.sl_no,
+              modelNo: row.model_no || "",
+              brand: row.brand || "",
+              vehicleModel: row.vehicle_model || "",
+              hsnNo: row.hsn_no || "",
+              vehicleCount: row.vehicle_count || 0,
+              chassisNo: row.chassis_no || "",
+              motorNo: row.motor_no || "",
+              batteryNo: row.battery_no || "",
+              manufacturerInvNo: row.manufacturer_inv_no || "",
+              batteryModel: row.battery_model || "",
+              batteryCount: row.battery_count || 0,
+              salesCount: row.sales_count || 0,
+              closingStock: row.closing_stock || 0,
+              createdAt: new Date(row.created_at).toLocaleDateString(),
+            })) || [];
+          setItems(rows);
+          return;
+        } catch (supabaseError: any) {
+          console.warn("Supabase inventory load failed, falling back to localStorage:", supabaseError?.message);
+        }
       }
+      const raw = localStorage.getItem("crm_inventory_items");
+      if (raw) setItems(JSON.parse(raw));
     } catch (error) {
       console.error("Error loading inventory:", error);
     } finally {

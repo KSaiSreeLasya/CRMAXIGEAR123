@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getEmployeeSession } from "@/lib/auth";
+import AdminPasswordDialog from "@/components/AdminPasswordDialog";
 
 export default function AdminSettings() {
   const navigate = useNavigate();
@@ -13,6 +15,10 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const employeeSession = getEmployeeSession();
+  const isAdmin = !employeeSession;
+  const [passwordVerified, setPasswordVerified] = useState(isAdmin);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,13 +76,24 @@ export default function AdminSettings() {
     }
   };
 
+  if (!passwordVerified) {
+    return (
+      <Layout>
+        <AdminPasswordDialog
+          isOpen={true}
+          onSuccess={() => setPasswordVerified(true)}
+        />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12 space-y-8">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => navigate("/dashboard")} 
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => navigate("/dashboard")}
           className="gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
