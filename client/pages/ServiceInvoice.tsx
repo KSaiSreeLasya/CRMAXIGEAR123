@@ -4,6 +4,7 @@ import { ArrowLeft, Download, Edit, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getEmployeeSession } from "@/lib/auth";
 import ServiceInvoiceContent from "@/components/ServiceInvoiceContent";
 
 interface ServiceInvoiceRecord {

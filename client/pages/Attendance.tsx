@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getEmployeeSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 /** Matches DB check constraint + MODULES_SQL_SETUP.sql */

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Trash2, Plus, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getEmployeeSession } from "@/lib/auth";
 
 interface EstimationRecord {
   id: string;
