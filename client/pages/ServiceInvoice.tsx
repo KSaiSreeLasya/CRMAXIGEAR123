@@ -243,8 +243,11 @@ export default function ServiceInvoice() {
             }
 
             const selectedSpare = spares.find(s => s.partName === form.product);
-            if (selectedSpare && unit > selectedSpare.qty) {
-              throw new Error(`Insufficient inventory. Available: ${selectedSpare.qty}`);
+            if (selectedSpare) {
+              const deductionQty = amount * unit;
+              if (deductionQty > selectedSpare.qty) {
+                throw new Error(`Insufficient inventory. Required: ${deductionQty}, Available: ${selectedSpare.qty}`);
+              }
             }
 
             const { data, error } = await supabase
@@ -269,7 +272,8 @@ export default function ServiceInvoice() {
             if (error) throw error;
 
             if (selectedSpare) {
-              const newQty = selectedSpare.qty - unit;
+              const deductionQty = amount * unit;
+              const newQty = selectedSpare.qty - deductionQty;
               const { error: updateError } = await supabase
                 .from("spares_inventory")
                 .update({ qty: newQty })
@@ -307,18 +311,24 @@ export default function ServiceInvoice() {
             localStorage.setItem("crm_service_invoices", JSON.stringify(updated));
 
             const selectedSpare = spares.find(s => s.partName === form.product);
-            if (selectedSpare && unit <= selectedSpare.qty) {
-              const updatedSpares = spares.map(s =>
-                s.id === selectedSpare.id ? { ...s, qty: s.qty - unit } : s
-              );
-              setSpares(updatedSpares);
-              localStorage.setItem("crm_spares", JSON.stringify(updatedSpares));
+            if (selectedSpare) {
+              const deductionQty = amount * unit;
+              if (deductionQty <= selectedSpare.qty) {
+                const updatedSpares = spares.map(s =>
+                  s.id === selectedSpare.id ? { ...s, qty: s.qty - deductionQty } : s
+                );
+                setSpares(updatedSpares);
+                localStorage.setItem("crm_spares", JSON.stringify(updatedSpares));
+              }
             }
           }
         } else {
           const selectedSpare = spares.find(s => s.partName === form.product);
-          if (selectedSpare && unit > selectedSpare.qty) {
-            throw new Error(`Insufficient inventory. Available: ${selectedSpare.qty}`);
+          if (selectedSpare) {
+            const deductionQty = amount * unit;
+            if (deductionQty > selectedSpare.qty) {
+              throw new Error(`Insufficient inventory. Required: ${deductionQty}, Available: ${selectedSpare.qty}`);
+            }
           }
 
           created = {
@@ -331,8 +341,9 @@ export default function ServiceInvoice() {
           localStorage.setItem("crm_service_invoices", JSON.stringify(updated));
 
           if (selectedSpare) {
+            const deductionQty = amount * unit;
             const updatedSpares = spares.map(s =>
-              s.id === selectedSpare.id ? { ...s, qty: s.qty - unit } : s
+              s.id === selectedSpare.id ? { ...s, qty: s.qty - deductionQty } : s
             );
             setSpares(updatedSpares);
             localStorage.setItem("crm_spares", JSON.stringify(updatedSpares));
