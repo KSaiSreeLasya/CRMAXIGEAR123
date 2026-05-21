@@ -1,13 +1,23 @@
+interface ProductRow {
+  product: string;
+  productDescription: string;
+  amount: number;
+  unit: number;
+}
+
 interface ServiceInvoiceRecord {
   id: string;
   serviceInvoiceNo: string;
   customerName: string;
   contactNo: string;
   location: string;
-  product: string;
-  productDescription: string;
   invoiceDate: string;
-  amount: number;
+  products?: ProductRow[];
+  product?: string;
+  productDescription?: string;
+  amount?: number;
+  unit?: number;
+  total: number;
   createdAt: string;
 }
 
@@ -128,6 +138,13 @@ export default function ServiceInvoiceContent({
     </div>
   );
 
+  const products = invoice.products || (invoice.product ? [{
+    product: invoice.product,
+    productDescription: invoice.productDescription || "",
+    amount: invoice.amount || 0,
+    unit: invoice.unit || 1,
+  }] : []);
+
   const itemsTable = (
     <div className="mb-6">
       <table className="w-full border-collapse text-sm">
@@ -154,24 +171,26 @@ export default function ServiceInvoiceContent({
           </tr>
         </thead>
         <tbody>
-          <tr className="border-2 border-gray-400">
-            <td className="border border-gray-400 px-3 py-2">1</td>
-            <td className="border border-gray-400 px-3 py-2">
-              <p className="font-bold text-gray-900">{invoice.product}</p>
-            </td>
-            <td className="border border-gray-400 px-3 py-2 text-sm text-gray-700">
-              {invoice.productDescription}
-            </td>
-            <td className="border border-gray-400 px-3 py-2 text-center font-semibold text-gray-900">
-              {invoice.unit || 1}
-            </td>
-            <td className="border border-gray-400 px-3 py-2 text-right font-bold text-gray-900">
-              ₹{(invoice.amount || 0).toFixed(2)}
-            </td>
-            <td className="border border-gray-400 px-3 py-2 text-right font-bold text-gray-900">
-              ₹{(invoice.total || invoice.amount || 0).toFixed(2)}
-            </td>
-          </tr>
+          {products.map((item, idx) => (
+            <tr key={idx} className="border-2 border-gray-400">
+              <td className="border border-gray-400 px-3 py-2">{idx + 1}</td>
+              <td className="border border-gray-400 px-3 py-2">
+                <p className="font-bold text-gray-900">{item.product}</p>
+              </td>
+              <td className="border border-gray-400 px-3 py-2 text-sm text-gray-700">
+                {item.productDescription}
+              </td>
+              <td className="border border-gray-400 px-3 py-2 text-center font-semibold text-gray-900">
+                {item.unit || 1}
+              </td>
+              <td className="border border-gray-400 px-3 py-2 text-right font-bold text-gray-900">
+                ₹{(item.amount || 0).toFixed(2)}
+              </td>
+              <td className="border border-gray-400 px-3 py-2 text-right font-bold text-gray-900">
+                ₹{((item.amount || 0) * (item.unit || 1)).toFixed(2)}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

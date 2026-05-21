@@ -1,11 +1,19 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Edit, Trash2, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { getEmployeeSession } from "@/lib/auth";
 import ServiceInvoiceContent from "@/components/ServiceInvoiceContent";
+
+interface ProductRow {
+  id?: string;
+  product: string;
+  productDescription: string;
+  amount: number;
+  unit: number;
+}
 
 interface ServiceInvoiceRecord {
   id: string;
@@ -13,11 +21,8 @@ interface ServiceInvoiceRecord {
   customerName: string;
   contactNo: string;
   location: string;
-  product: string;
-  productDescription: string;
   invoiceDate: string;
-  amount: number;
-  unit: number;
+  products: ProductRow[];
   total: number;
   createdAt: string;
 }
@@ -31,17 +36,21 @@ interface SpareItem {
   createdAt: string;
 }
 
+const DEFAULT_PRODUCT_ROW: ProductRow = {
+  id: "",
+  product: "",
+  productDescription: "",
+  amount: 0,
+  unit: 1,
+};
+
 const DEFAULT_FORM = {
   serviceInvoiceNo: "",
   customerName: "",
   contactNo: "",
   location: "",
-  product: "",
-  productDescription: "",
   invoiceDate: "",
-  amount: "",
-  unit: "",
-  total: "",
+  products: [{ ...DEFAULT_PRODUCT_ROW, id: `product_${Date.now()}` }],
 };
 
 function getNextServiceInvoiceNumber(): string {
@@ -121,11 +130,8 @@ export default function ServiceInvoice() {
               customerName: row.customer_name || "",
               contactNo: row.contact_no || "",
               location: row.location || "",
-              product: row.product || "",
-              productDescription: row.product_description || "",
               invoiceDate: row.invoice_date || "",
-              amount: row.amount || 0,
-              unit: row.unit || 1,
+              products: row.products || [],
               total: row.total || 0,
               createdAt: new Date(row.created_at).toLocaleDateString(),
             })) || [];
@@ -136,7 +142,27 @@ export default function ServiceInvoice() {
         }
       }
       const raw = localStorage.getItem("crm_service_invoices");
-      if (raw) setInvoices(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw) as any[];
+        const converted = parsed.map((inv: any) => {
+          if (Array.isArray(inv.products)) {
+            return inv;
+          }
+          if (inv.product) {
+            return {
+              ...inv,
+              products: [{
+                product: inv.product || "",
+                productDescription: inv.productDescription || "",
+                amount: inv.amount || 0,
+                unit: inv.unit || 1,
+              }],
+            };
+          }
+          return { ...inv, products: [] };
+        });
+        setInvoices(converted);
+      }
     } catch (error) {
       console.error("Error loading service invoices:", error);
     } finally {
@@ -182,24 +208,34 @@ export default function ServiceInvoice() {
     }
   };
 
+  const calculateTotal = (products: ProductRow[]) => {
+    return (products || []).reduce((sum, p) => sum + ((p.amount || 0) * (p.unit || 1)), 0);
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const amount = Number(form.amount || 0);
-      const unit = Number(form.unit || 1);
-      const total = amount * unit;
+      if (form.products.length === 0) {
+        alert("Please add at least one product");
+        setIsSaving(false);
+        return;
+      }
 
+      const total = calculateTotal(form.products);
+      const productsPayload = form.products.map(p => ({
+        product: p.product.trim(),
+        productDescription: p.productDescription.trim(),
+        amount: p.amount,
+        unit: p.unit,
+      }));
       const payload = {
         serviceInvoiceNo: form.serviceInvoiceNo.trim(),
         customerName: form.customerName.trim(),
         contactNo: form.contactNo.trim(),
         location: form.location.trim(),
-        product: form.product.trim(),
-        productDescription: form.productDescription.trim(),
         invoiceDate: form.invoiceDate || new Date().toISOString().split('T')[0],
-        amount,
-        unit,
+        products: productsPayload,
         total,
       };
 
@@ -212,11 +248,8 @@ export default function ServiceInvoice() {
               customer_name: payload.customerName,
               contact_no: payload.contactNo,
               location: payload.location,
-              product: payload.product,
-              product_description: payload.productDescription,
               invoice_date: payload.invoiceDate,
-              amount: payload.amount,
-              unit: payload.unit,
+              products: payload.products,
               total: payload.total,
             })
             .eq("id", editingId);
@@ -227,7 +260,13 @@ export default function ServiceInvoice() {
           item.id === editingId
             ? {
                 ...item,
-                ...payload,
+                serviceInvoiceNo: payload.serviceInvoiceNo,
+                customerName: payload.customerName,
+                contactNo: payload.contactNo,
+                location: payload.location,
+                invoiceDate: payload.invoiceDate,
+                products: productsPayload,
+                total: payload.total,
               }
             : item
         );
@@ -251,11 +290,8 @@ export default function ServiceInvoice() {
                   customer_name: payload.customerName,
                   contact_no: payload.contactNo,
                   location: payload.location,
-                  product: payload.product,
-                  product_description: payload.productDescription,
                   invoice_date: payload.invoiceDate,
-                  amount: payload.amount,
-                  unit: payload.unit,
+                  products: payload.products,
                   total: payload.total,
                 },
               ])
@@ -269,11 +305,8 @@ export default function ServiceInvoice() {
               customerName: data.customer_name,
               contactNo: data.contact_no,
               location: data.location,
-              product: data.product,
-              productDescription: data.product_description,
               invoiceDate: data.invoice_date,
-              amount: data.amount,
-              unit: data.unit,
+              products: productsPayload,
               total: data.total,
               createdAt: new Date(data.created_at).toLocaleDateString(),
             };
@@ -282,8 +315,14 @@ export default function ServiceInvoice() {
             console.warn("Supabase insert failed, using localStorage:", supabaseError?.message);
             created = {
               id: `service_invoice_${Date.now()}`,
+              serviceInvoiceNo: payload.serviceInvoiceNo,
+              customerName: payload.customerName,
+              contactNo: payload.contactNo,
+              location: payload.location,
+              invoiceDate: payload.invoiceDate,
+              products: productsPayload,
+              total: payload.total,
               createdAt: new Date().toLocaleDateString(),
-              ...payload,
             };
             const updated = [created, ...invoices];
             setInvoices(updated);
@@ -293,8 +332,14 @@ export default function ServiceInvoice() {
         } else {
           created = {
             id: `service_invoice_${Date.now()}`,
+            serviceInvoiceNo: payload.serviceInvoiceNo,
+            customerName: payload.customerName,
+            contactNo: payload.contactNo,
+            location: payload.location,
+            invoiceDate: payload.invoiceDate,
+            products: productsPayload,
+            total: payload.total,
             createdAt: new Date().toLocaleDateString(),
-            ...payload,
           };
           const updated = [created, ...invoices];
           setInvoices(updated);
@@ -339,12 +384,14 @@ export default function ServiceInvoice() {
       customerName: item.customerName,
       contactNo: item.contactNo,
       location: item.location,
-      product: item.product,
-      productDescription: item.productDescription,
       invoiceDate: item.invoiceDate,
-      amount: String(item.amount),
-      unit: String(item.unit),
-      total: String(item.total),
+      products: item.products.map(p => ({
+        id: `product_${Date.now()}_${Math.random()}`,
+        product: p.product,
+        productDescription: p.productDescription,
+        amount: p.amount,
+        unit: p.unit,
+      })),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -411,134 +458,197 @@ export default function ServiceInvoice() {
           <h2 className="text-xl font-semibold mb-4">
             {editingId ? "Edit Service Invoice" : "Create New Service Invoice"}
           </h2>
-          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background text-gray-500 cursor-not-allowed"
-              placeholder="Auto-generated"
-              value={form.serviceInvoiceNo}
-              readOnly
-              disabled
-            />
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Customer Name"
-              value={form.customerName}
-              onChange={(e) => setForm((prev) => ({ ...prev, customerName: e.target.value }))}
-              required
-            />
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Contact No"
-              value={form.contactNo}
-              onChange={(e) => setForm((prev) => ({ ...prev, contactNo: e.target.value }))}
-            />
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Location"
-              value={form.location}
-              onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
-            />
-            <select
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              value={form.product}
-              onChange={(e) => {
-                const selected = spares.find(s => s.partName === e.target.value);
-                setForm((prev) => ({
-                  ...prev,
-                  product: e.target.value,
-                  amount: String(selected?.price || 0),
-                }));
-              }}
-              required
-            >
-              <option value="">Select Product</option>
-              {isLoadingSpares ? (
-                <option>Loading spares...</option>
-              ) : spares.length === 0 ? (
-                <option>No spares available</option>
-              ) : (
-                spares.map((spare) => (
-                  <option key={spare.id} value={spare.partName}>
-                    {spare.partName}
-                  </option>
-                ))
-              )}
-            </select>
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Product Description"
-              value={form.productDescription}
-              onChange={(e) => setForm((prev) => ({ ...prev, productDescription: e.target.value }))}
-            />
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Invoice Date"
-              type="date"
-              value={form.invoiceDate}
-              onChange={(e) => setForm((prev) => ({ ...prev, invoiceDate: e.target.value }))}
-              required
-            />
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Amount"
-              type="number"
-              step="0.01"
-              value={form.amount}
-              onChange={(e) => {
-                const newAmount = e.target.value;
-                const unit = Number(form.unit || 1);
-                const total = Number(newAmount) * unit;
-                setForm((prev) => ({
-                  ...prev,
-                  amount: newAmount,
-                  total: String(total),
-                }));
-              }}
-              required
-            />
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background"
-              placeholder="Unit"
-              type="number"
-              step="1"
-              value={form.unit}
-              onChange={(e) => {
-                const newUnit = e.target.value;
-                const amount = Number(form.amount || 0);
-                const total = amount * Number(newUnit);
-                setForm((prev) => ({
-                  ...prev,
-                  unit: newUnit,
-                  total: String(total),
-                }));
-              }}
-              required
-            />
-            <input
-              className="px-4 py-2 border border-border rounded-lg bg-background text-gray-500 cursor-not-allowed"
-              placeholder="Total"
-              type="number"
-              step="0.01"
-              value={form.total}
-              readOnly
-              disabled
-            />
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-            >
-              {isSaving ? "Saving..." : editingId ? "Update Invoice" : "Create Invoice"}
-            </button>
-            {editingId && (
+          <form onSubmit={handleSave} className="space-y-6">
+            {/* Header Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                className="px-4 py-2 border border-border rounded-lg bg-background text-gray-500 cursor-not-allowed"
+                placeholder="Auto-generated"
+                value={form.serviceInvoiceNo}
+                readOnly
+                disabled
+              />
+              <input
+                className="px-4 py-2 border border-border rounded-lg bg-background"
+                placeholder="Customer Name"
+                value={form.customerName}
+                onChange={(e) => setForm((prev) => ({ ...prev, customerName: e.target.value }))}
+                required
+              />
+              <input
+                className="px-4 py-2 border border-border rounded-lg bg-background"
+                placeholder="Contact No"
+                value={form.contactNo}
+                onChange={(e) => setForm((prev) => ({ ...prev, contactNo: e.target.value }))}
+              />
+              <input
+                className="px-4 py-2 border border-border rounded-lg bg-background"
+                placeholder="Location"
+                value={form.location}
+                onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
+              />
+              <input
+                className="px-4 py-2 border border-border rounded-lg bg-background"
+                placeholder="Invoice Date"
+                type="date"
+                value={form.invoiceDate}
+                onChange={(e) => setForm((prev) => ({ ...prev, invoiceDate: e.target.value }))}
+                required
+              />
+            </div>
+
+            {/* Products Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Products</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      products: [
+                        ...prev.products,
+                        { ...DEFAULT_PRODUCT_ROW, id: `product_${Date.now()}` },
+                      ],
+                    }));
+                  }}
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/90"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Product
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {form.products.map((product, idx) => (
+                  <div key={product.id} className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end p-3 bg-muted/50 rounded-lg">
+                    <select
+                      className="px-3 py-2 border border-border rounded-lg bg-background text-sm md:col-span-2"
+                      value={product.product}
+                      onChange={(e) => {
+                        const selected = spares.find(s => s.partName === e.target.value);
+                        const updatedProducts = [...form.products];
+                        updatedProducts[idx] = {
+                          ...updatedProducts[idx],
+                          product: e.target.value,
+                          amount: selected?.price || 0,
+                        };
+                        setForm((prev) => ({ ...prev, products: updatedProducts }));
+                      }}
+                      required
+                    >
+                      <option value="">Select Product</option>
+                      {isLoadingSpares ? (
+                        <option>Loading spares...</option>
+                      ) : spares.length === 0 ? (
+                        <option>No spares available</option>
+                      ) : (
+                        spares.map((spare) => (
+                          <option key={spare.id} value={spare.partName}>
+                            {spare.partName}
+                          </option>
+                        ))
+                      )}
+                    </select>
+
+                    <input
+                      className="px-3 py-2 border border-border rounded-lg bg-background text-sm md:col-span-1"
+                      placeholder="Price"
+                      type="number"
+                      step="0.01"
+                      value={product.amount}
+                      onChange={(e) => {
+                        const updatedProducts = [...form.products];
+                        updatedProducts[idx] = {
+                          ...updatedProducts[idx],
+                          amount: Number(e.target.value),
+                        };
+                        setForm((prev) => ({ ...prev, products: updatedProducts }));
+                      }}
+                      required
+                    />
+
+                    <input
+                      className="px-3 py-2 border border-border rounded-lg bg-background text-sm md:col-span-1"
+                      placeholder="Units"
+                      type="number"
+                      step="1"
+                      value={product.unit}
+                      onChange={(e) => {
+                        const updatedProducts = [...form.products];
+                        updatedProducts[idx] = {
+                          ...updatedProducts[idx],
+                          unit: Number(e.target.value),
+                        };
+                        setForm((prev) => ({ ...prev, products: updatedProducts }));
+                      }}
+                      required
+                    />
+
+                    <div className="text-sm font-semibold px-3 py-2 bg-background rounded-lg md:col-span-1">
+                      ₹{(product.amount * product.unit).toFixed(2)}
+                    </div>
+
+                    {form.products.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = form.products.filter((_, i) => i !== idx);
+                          setForm((prev) => ({ ...prev, products: updated }));
+                        }}
+                        className="p-2 text-destructive hover:bg-destructive/10 rounded-lg md:col-span-1 flex justify-center"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Product Description - Full Width */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Product Descriptions (comma-separated)</label>
+                <input
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-background text-sm"
+                  placeholder="Add descriptions for products"
+                  value={form.products.map(p => p.productDescription).join(", ")}
+                  onChange={(e) => {
+                    const descriptions = e.target.value.split(",").map(d => d.trim());
+                    const updatedProducts = form.products.map((p, idx) => ({
+                      ...p,
+                      productDescription: descriptions[idx] || "",
+                    }));
+                    setForm((prev) => ({ ...prev, products: updatedProducts }));
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="bg-primary/10 rounded-lg p-4 flex justify-between items-center">
+              <span className="font-semibold text-lg">Invoice Total:</span>
+              <span className="text-2xl font-bold text-primary">₹{calculateTotal(form.products).toFixed(2)}</span>
+            </div>
+
+            {/* Submit Buttons */}
+            <div className="flex gap-3 pt-4">
               <button
-                type="button"
-                onClick={cancelEdit}
-                className="inline-flex items-center justify-center rounded-lg border border-border px-5 py-2.5 hover:bg-muted/50"
+                type="submit"
+                disabled={isSaving}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
-                Cancel
+                {isSaving ? "Saving..." : editingId ? "Update Invoice" : "Create Invoice"}
               </button>
-            )}
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="inline-flex items-center justify-center rounded-lg border border-border px-5 py-2.5 hover:bg-muted/50"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -558,10 +668,8 @@ export default function ServiceInvoice() {
                     <th className="px-4 py-2 text-left">Customer</th>
                     <th className="px-4 py-2 text-left">Contact</th>
                     <th className="px-4 py-2 text-left">Location</th>
-                    <th className="px-4 py-2 text-left">Product</th>
+                    <th className="px-4 py-2 text-left">Products</th>
                     <th className="px-4 py-2 text-left">Date</th>
-                    <th className="px-4 py-2 text-right">Amount</th>
-                    <th className="px-4 py-2 text-center">Unit</th>
                     <th className="px-4 py-2 text-right">Total</th>
                     <th className="px-4 py-2 text-left">Action</th>
                   </tr>
@@ -573,11 +681,17 @@ export default function ServiceInvoice() {
                       <td className="px-4 py-2">{invoice.customerName}</td>
                       <td className="px-4 py-2">{invoice.contactNo}</td>
                       <td className="px-4 py-2">{invoice.location}</td>
-                      <td className="px-4 py-2">{invoice.product}</td>
+                      <td className="px-4 py-2 text-sm">
+                        <div className="space-y-1">
+                          {(invoice.products || []).map((p, idx) => (
+                            <div key={idx} className="text-xs">
+                              {p.product} × {p.unit || 1} @ ₹{(p.amount || 0).toFixed(2)}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-4 py-2">{invoice.invoiceDate}</td>
-                      <td className="px-4 py-2 text-right font-semibold">₹{invoice.amount.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-center">{invoice.unit}</td>
-                      <td className="px-4 py-2 text-right font-semibold">₹{invoice.total.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-right font-semibold">₹{(invoice.total || 0).toFixed(2)}</td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
                           <button
