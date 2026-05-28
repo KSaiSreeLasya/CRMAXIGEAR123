@@ -103,18 +103,6 @@ export function SpareImportExport({ spares, onImport }: SpareImportExportProps) 
           type="button"
           variant="outline"
           className="gap-2"
-          onClick={() => exportToExcel(spares)}
-          disabled={spares.length === 0}
-          title="Download spare inventory as Excel"
-        >
-          <Download className="w-4 h-4" />
-          Export Excel
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="gap-2"
           onClick={() => exportToPDF(spares)}
           disabled={spares.length === 0}
           title="Download spare inventory as PDF report"
@@ -126,7 +114,7 @@ export function SpareImportExport({ spares, onImport }: SpareImportExportProps) 
 
       {/* Help text */}
       <p className="text-xs text-muted-foreground">
-        CSV/Excel files must have columns: Part Name, Price, Quantity
+        CSV/Excel files must have columns: part_name (or Part Name), price, qty (or Quantity)
       </p>
 
       {/* Error Message */}

@@ -1,5 +1,4 @@
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 
 interface SpareItem {
   id: string;
@@ -63,41 +62,65 @@ export const exportToExcel = (spares: SpareItem[], filename = "spares_inventory.
 
 export const exportToPDF = (spares: SpareItem[], filename = "spares_inventory.pdf") => {
   const doc = new jsPDF();
+  let yPosition = 20;
 
+  // Title
   doc.setFontSize(16);
-  doc.text("Spares Inventory Report", 14, 15);
+  doc.setFont(undefined, "bold");
+  doc.text("Spares Inventory Report", 14, yPosition);
 
+  // Date
+  yPosition += 10;
   doc.setFontSize(10);
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 25);
+  doc.setFont(undefined, "normal");
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, yPosition);
 
-  const tableData = spares.map((spare) => [
-    spare.partName,
-    `₹${spare.price.toFixed(2)}`,
-    spare.qty,
-    `₹${spare.total.toFixed(2)}`,
-    spare.createdAt,
-  ]);
+  // Table header
+  yPosition += 15;
+  doc.setFont(undefined, "bold");
+  doc.setFillColor(41, 128, 185);
+  doc.setTextColor(255, 255, 255);
 
-  autoTable(doc, {
-    head: [["Part Name", "Price", "Quantity", "Total", "Created At"]],
-    body: tableData,
-    startY: 35,
-    margin: { top: 35 },
-    styles: {
-      fontSize: 9,
-      cellPadding: 3,
-    },
-    headStyles: {
-      fillColor: [41, 128, 185],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-    },
+  const colX = [14, 50, 90, 130, 170];
+  const colWidths = [36, 40, 40, 40, 30];
+  const headers = ["Part Name", "Price", "Quantity", "Total", "Date"];
+
+  // Draw header row
+  for (let i = 0; i < headers.length; i++) {
+    doc.rect(colX[i], yPosition - 5, colWidths[i], 8, "F");
+    doc.text(headers[i], colX[i] + 2, yPosition);
+  }
+
+  // Table data
+  yPosition += 10;
+  doc.setFont(undefined, "normal");
+  doc.setTextColor(0, 0, 0);
+
+  spares.forEach((spare) => {
+    if (yPosition > 270) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    const row = [
+      spare.partName.substring(0, 25),
+      `₹${spare.price.toFixed(2)}`,
+      String(spare.qty),
+      `₹${spare.total.toFixed(2)}`,
+      spare.createdAt,
+    ];
+
+    for (let i = 0; i < row.length; i++) {
+      doc.text(row[i], colX[i] + 2, yPosition);
+    }
+    yPosition += 8;
   });
 
+  // Total line
+  yPosition += 5;
+  doc.setFont(undefined, "bold");
   const totalPrice = spares.reduce((sum, spare) => sum + spare.total, 0);
-  const finalY = (doc as any).lastAutoTable.finalY || 35;
-  doc.setFontSize(10);
-  doc.text(`Total Inventory Value: ₹${totalPrice.toFixed(2)}`, 14, finalY + 15);
+  doc.text(`Total Inventory Value: ₹${totalPrice.toFixed(2)}`, 14, yPosition);
 
   doc.save(filename);
 };
@@ -115,12 +138,16 @@ export const importFromCSV = (file: File): Promise<Partial<SpareItem>[]> => {
         }
 
         const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/"/g, ""));
-        const expectedHeaders = ["part name", "price", "quantity"];
 
-        if (!expectedHeaders.every((h) => headers.includes(h))) {
+        // Support both naming conventions: part_name/part name, price, qty/quantity
+        const partNameIdx = headers.findIndex((h) => h === "part name" || h === "part_name");
+        const priceIdx = headers.findIndex((h) => h === "price");
+        const qtyIdx = headers.findIndex((h) => h === "qty" || h === "quantity");
+
+        if (partNameIdx === -1 || priceIdx === -1 || qtyIdx === -1) {
           reject(
             new Error(
-              `CSV must contain columns: ${expectedHeaders.join(", ")}. Found: ${headers.join(", ")}`
+              `CSV must contain columns: part_name (or Part Name), price, qty (or Quantity). Found: ${headers.join(", ")}`
             )
           );
           return;
@@ -132,21 +159,25 @@ export const importFromCSV = (file: File): Promise<Partial<SpareItem>[]> => {
           if (!line) continue;
 
           const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
-          const spare: Partial<SpareItem> = {
-            partName: values[headers.indexOf("part name")] || "",
-            price: parseFloat(values[headers.indexOf("price")] || "0") || 0,
-            qty: parseInt(values[headers.indexOf("quantity")] || "0", 10) || 0,
-          };
+          const partName = values[partNameIdx] || "";
+          const price = parseFloat(values[priceIdx] || "0") || 0;
+          const qty = parseInt(values[qtyIdx] || "0", 10) || 0;
 
-          if (!spare.partName) {
+          if (!partName) {
             throw new Error(`Row ${i + 1}: Part Name is required`);
           }
-          if (spare.price! < 0) {
+          if (price < 0) {
             throw new Error(`Row ${i + 1}: Price cannot be negative`);
           }
-          if (spare.qty! < 0) {
+          if (qty < 0) {
             throw new Error(`Row ${i + 1}: Quantity cannot be negative`);
           }
+
+          const spare: Partial<SpareItem> = {
+            partName,
+            price,
+            qty,
+          };
 
           spares.push(spare);
         }
