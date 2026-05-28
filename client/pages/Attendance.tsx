@@ -190,7 +190,23 @@ export default function Attendance() {
     try {
       if (supabase) {
         try {
-          // Fetch all employees directly from Supabase, no auth check needed for read access
+          // Verify user is authenticated before querying
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) {
+            console.warn("User not authenticated, using localStorage");
+            const raw = localStorage.getItem("crm_employees");
+            if (raw) {
+              const stored = JSON.parse(raw);
+              setEmployees(stored);
+              console.log(`Loaded ${stored.length} employees from localStorage`);
+            } else {
+              console.warn("No employees in localStorage either");
+              setEmployees([]);
+            }
+            return;
+          }
+
+          // Fetch all employees from Supabase with authenticated user context
           const { data, error } = await supabase
             .from("employees")
             .select("*")

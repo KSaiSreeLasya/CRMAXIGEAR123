@@ -71,7 +71,7 @@ alter table public.inventory_items enable row level security;
 
 drop policy if exists "employees_select_own" on public.employees;
 create policy "employees_select_own" on public.employees
-for select using (auth.uid() = user_id);
+for select using (auth.role() = 'authenticated');
 
 drop policy if exists "employees_insert_own" on public.employees;
 create policy "employees_insert_own" on public.employees
@@ -162,7 +162,7 @@ grant execute on function public.employee_login(text, text) to anon, authenticat
 
 drop policy if exists "attendance_select_own" on public.attendance;
 create policy "attendance_select_own" on public.attendance
-for select using (auth.uid() = user_id);
+for select using (auth.role() = 'authenticated');
 
 drop policy if exists "attendance_insert_own" on public.attendance;
 create policy "attendance_insert_own" on public.attendance
