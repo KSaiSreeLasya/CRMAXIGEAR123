@@ -126,8 +126,9 @@ export const importFromCSV = async (
           const record: Record<string, any> = {};
 
           for (const [field, colIndex] of Object.entries(columnMap)) {
-            const value = row[parseInt(colIndex)];
-            
+            const colIndexNum = typeof colIndex === 'string' ? parseInt(colIndex, 10) : colIndex;
+            const value = row[colIndexNum];
+
             // Handle numeric fields
             if (["vehicleCount", "batteryCount", "salesCount", "count", "amount", "price", "qty", "unit"].includes(field)) {
               record[field] = value ? parseInt(value, 10) : 0;
