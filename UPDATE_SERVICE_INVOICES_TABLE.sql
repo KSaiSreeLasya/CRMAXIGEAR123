@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS service_invoices (
   gst_enabled BOOLEAN DEFAULT true,
   gst_amount DECIMAL(10, 2) DEFAULT 0.00,
   total DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+  mode_of_payment TEXT DEFAULT 'Cash' CHECK (mode_of_payment IN ('Cash', 'Card', 'UPI')),
+  lead_source TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -33,6 +35,8 @@ CREATE TABLE IF NOT EXISTS service_invoices (
 CREATE INDEX IF NOT EXISTS idx_service_invoices_user_id ON service_invoices(user_id);
 CREATE INDEX IF NOT EXISTS idx_service_invoices_service_invoice_no ON service_invoices(service_invoice_no);
 CREATE INDEX IF NOT EXISTS idx_service_invoices_created_at ON service_invoices(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_service_invoices_mode_of_payment ON service_invoices(mode_of_payment);
+CREATE INDEX IF NOT EXISTS idx_service_invoices_lead_source ON service_invoices(lead_source);
 
 -- Disable Row Level Security to allow employee-based access
 ALTER TABLE service_invoices DISABLE ROW LEVEL SECURITY;

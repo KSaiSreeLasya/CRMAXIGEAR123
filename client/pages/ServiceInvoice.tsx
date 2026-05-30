@@ -27,6 +27,8 @@ interface ServiceInvoiceRecord {
   labourCharges: number;
   gstEnabled: boolean;
   gstAmount: number;
+  modeOfPayment: string;
+  leadSource: string;
   createdAt: string;
 }
 
@@ -55,6 +57,8 @@ interface InvoiceForm {
   invoiceDate: string;
   labourCharges: number;
   gstEnabled: boolean;
+  modeOfPayment: string;
+  leadSource: string;
   products: ProductRow[];
 }
 
@@ -66,6 +70,8 @@ const createDefaultForm = (): InvoiceForm => ({
   invoiceDate: "",
   labourCharges: 0,
   gstEnabled: true,
+  modeOfPayment: "Cash",
+  leadSource: "",
   products: [{ ...DEFAULT_PRODUCT_ROW, id: `product_${Date.now()}` }],
 });
 
@@ -154,6 +160,8 @@ export default function ServiceInvoice() {
               gstEnabled: row.gst_enabled !== false,
               gstAmount: row.gst_amount || 0,
               total: row.total || 0,
+              modeOfPayment: row.mode_of_payment || "Cash",
+              leadSource: row.lead_source || "",
               createdAt: new Date(row.created_at).toLocaleDateString(),
             })) || [];
           setInvoices(rows);
@@ -170,6 +178,8 @@ export default function ServiceInvoice() {
           labourCharges: inv.labourCharges || 0,
           gstEnabled: inv.gstEnabled !== false,
           gstAmount: inv.gstAmount || 0,
+          modeOfPayment: inv.modeOfPayment || "Cash",
+          leadSource: inv.leadSource || "",
           products: Array.isArray(inv.products) ? inv.products : (inv.product ? [{
             product: inv.product || "",
             productDescription: inv.productDescription || "",
@@ -272,6 +282,8 @@ export default function ServiceInvoice() {
         gstEnabled: form.gstEnabled,
         gstAmount,
         total,
+        modeOfPayment: form.modeOfPayment,
+        leadSource: form.leadSource.trim(),
       };
 
       if (editingId) {
@@ -289,6 +301,8 @@ export default function ServiceInvoice() {
               gst_enabled: payload.gstEnabled,
               gst_amount: payload.gstAmount,
               total: payload.total,
+              mode_of_payment: payload.modeOfPayment,
+              lead_source: payload.leadSource,
             })
             .eq("id", editingId);
           if (error) throw error;
@@ -308,6 +322,8 @@ export default function ServiceInvoice() {
                 gstEnabled: payload.gstEnabled,
                 gstAmount: payload.gstAmount,
                 total: payload.total,
+                modeOfPayment: payload.modeOfPayment,
+                leadSource: payload.leadSource,
               }
             : item
         );
@@ -347,6 +363,8 @@ export default function ServiceInvoice() {
                   gst_enabled: payload.gstEnabled,
                   gst_amount: payload.gstAmount,
                   total: payload.total,
+                  mode_of_payment: payload.modeOfPayment,
+                  lead_source: payload.leadSource,
                 },
               ])
               .select()
@@ -365,6 +383,8 @@ export default function ServiceInvoice() {
               gstEnabled: data.gst_enabled !== false,
               gstAmount: data.gst_amount || 0,
               total: data.total,
+              modeOfPayment: data.mode_of_payment || "Cash",
+              leadSource: data.lead_source || "",
               createdAt: new Date(data.created_at).toLocaleDateString(),
             };
             setInvoices((prev) => [created, ...prev]);
@@ -382,6 +402,8 @@ export default function ServiceInvoice() {
               gstEnabled: payload.gstEnabled,
               gstAmount: payload.gstAmount,
               total: payload.total,
+              modeOfPayment: payload.modeOfPayment,
+              leadSource: payload.leadSource,
               createdAt: new Date().toLocaleDateString(),
             };
             const updated = [created, ...invoices];
@@ -402,6 +424,8 @@ export default function ServiceInvoice() {
             gstEnabled: payload.gstEnabled,
             gstAmount: payload.gstAmount,
             total: payload.total,
+            modeOfPayment: payload.modeOfPayment,
+            leadSource: payload.leadSource,
             createdAt: new Date().toLocaleDateString(),
           };
           const updated = [created, ...invoices];
@@ -450,6 +474,8 @@ export default function ServiceInvoice() {
       invoiceDate: item.invoiceDate,
       labourCharges: item.labourCharges,
       gstEnabled: item.gstEnabled,
+      modeOfPayment: item.modeOfPayment,
+      leadSource: item.leadSource,
       products: item.products.map(p => ({
         id: `product_${Date.now()}_${Math.random()}`,
         product: p.product,
@@ -582,6 +608,27 @@ export default function ServiceInvoice() {
                   step="0.01"
                   value={form.labourCharges}
                   onChange={(e) => setForm((prev) => ({ ...prev, labourCharges: Number(e.target.value) }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Mode of Payment</label>
+                <select
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-background"
+                  value={form.modeOfPayment}
+                  onChange={(e) => setForm((prev) => ({ ...prev, modeOfPayment: e.target.value }))}
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Lead Source</label>
+                <input
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-background"
+                  placeholder="e.g. Direct Walk-in, Referral"
+                  value={form.leadSource}
+                  onChange={(e) => setForm((prev) => ({ ...prev, leadSource: e.target.value }))}
                 />
               </div>
             </div>
@@ -779,7 +826,7 @@ export default function ServiceInvoice() {
             <p className="text-muted-foreground">No service invoices yet.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1200px] text-sm">
+              <table className="w-full min-w-[1400px] text-sm">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-4 py-2 text-left">Invoice No</th>
@@ -788,6 +835,8 @@ export default function ServiceInvoice() {
                     <th className="px-4 py-2 text-left">Location</th>
                     <th className="px-4 py-2 text-left">Products</th>
                     <th className="px-4 py-2 text-left">Date</th>
+                    <th className="px-4 py-2 text-left">Payment Mode</th>
+                    <th className="px-4 py-2 text-left">Lead Source</th>
                     <th className="px-4 py-2 text-right">Total</th>
                     <th className="px-4 py-2 text-left">Action</th>
                   </tr>
@@ -809,6 +858,8 @@ export default function ServiceInvoice() {
                         </div>
                       </td>
                       <td className="px-4 py-2">{invoice.invoiceDate}</td>
+                      <td className="px-4 py-2 text-sm">{invoice.modeOfPayment}</td>
+                      <td className="px-4 py-2 text-sm">{invoice.leadSource || "-"}</td>
                       <td className="px-4 py-2 text-right font-semibold">₹{(invoice.total || 0).toFixed(2)}</td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">

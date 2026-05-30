@@ -13,6 +13,7 @@ interface EstimationRecord {
   estimationSlipNo: string;
   customerName: string;
   contactNo: string;
+  address: string;
   estimationDate: string;
   model: string;
   amount: number;
@@ -25,6 +26,7 @@ const DEFAULT_ESTIMATION_FORM = {
   estimationSlipNo: "",
   customerName: "",
   contactNo: "",
+  address: "",
   estimationDate: "",
   model: "",
   amount: "",
@@ -152,6 +154,7 @@ export default function Projects() {
               estimationSlipNo: row.estimation_slip_no || "",
               customerName: row.customer_name || "",
               contactNo: row.contact_no || "",
+              address: row.address || "",
               estimationDate: row.estimation_date || "",
               model: row.model || "",
               amount: row.amount || 0,
@@ -184,6 +187,7 @@ export default function Projects() {
         estimationSlipNo: estimationForm.estimationSlipNo.trim(),
         customerName: estimationForm.customerName.trim(),
         contactNo: estimationForm.contactNo.trim(),
+        address: estimationForm.address.trim(),
         estimationDate: estimationForm.estimationDate,
         model: estimationForm.model.trim(),
         amount,
@@ -200,6 +204,7 @@ export default function Projects() {
                 estimation_slip_no: payload.estimationSlipNo,
                 customer_name: payload.customerName,
                 contact_no: payload.contactNo,
+                address: payload.address,
                 estimation_date: payload.estimationDate,
                 model: payload.model,
                 amount: payload.amount,
@@ -235,6 +240,7 @@ export default function Projects() {
                   estimation_slip_no: payload.estimationSlipNo,
                   customer_name: payload.customerName,
                   contact_no: payload.contactNo,
+                  address: payload.address,
                   estimation_date: payload.estimationDate,
                   model: payload.model,
                   amount: payload.amount,
@@ -309,6 +315,7 @@ export default function Projects() {
       estimationSlipNo: item.estimationSlipNo,
       customerName: item.customerName,
       contactNo: item.contactNo,
+      address: item.address,
       estimationDate: item.estimationDate,
       model: item.model,
       amount: String(item.amount),
@@ -713,6 +720,13 @@ export default function Projects() {
                   />
                   <input
                     className="px-4 py-2 border border-border rounded-lg bg-background"
+                    placeholder="Address"
+                    value={estimationForm.address}
+                    onChange={(e) => setEstimationForm((prev) => ({ ...prev, address: e.target.value }))}
+                    required
+                  />
+                  <input
+                    className="px-4 py-2 border border-border rounded-lg bg-background"
                     placeholder="Estimation Date"
                     type="date"
                     value={estimationForm.estimationDate}
@@ -775,12 +789,13 @@ export default function Projects() {
                   <p className="text-muted-foreground">No estimations yet.</p>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[1000px] text-sm">
+                    <table className="w-full min-w-[1200px] text-sm">
                       <thead>
                         <tr className="border-b border-border">
                           <th className="px-4 py-2 text-left">Slip No</th>
                           <th className="px-4 py-2 text-left">Customer</th>
                           <th className="px-4 py-2 text-left">Contact</th>
+                          <th className="px-4 py-2 text-left">Address</th>
                           <th className="px-4 py-2 text-left">Date</th>
                           <th className="px-4 py-2 text-left">Model</th>
                           <th className="px-4 py-2 text-right">Amount</th>
@@ -795,6 +810,7 @@ export default function Projects() {
                             <td className="px-4 py-2">{est.estimationSlipNo}</td>
                             <td className="px-4 py-2">{est.customerName}</td>
                             <td className="px-4 py-2">{est.contactNo}</td>
+                            <td className="px-4 py-2">{est.address}</td>
                             <td className="px-4 py-2">{est.estimationDate}</td>
                             <td className="px-4 py-2">{est.model}</td>
                             <td className="px-4 py-2 text-right font-semibold">₹{est.amount.toFixed(2)}</td>
