@@ -8,7 +8,8 @@ import { getEmployeeSession } from "@/lib/auth";
 import ServiceInvoiceContent from "@/components/ServiceInvoiceContent";
 import { ImportExport } from "@/components/ImportExport";
 import { SplitPaymentForm, type SplitPayment } from "@/components/SplitPaymentForm";
-import { createTransaction, getTransactionByReference } from "@/lib/transactions";
+import { PaymentHistoryDisplay } from "@/components/PaymentHistoryDisplay";
+import { createTransaction, getTransactionByReference, getSplitPaymentsByReference, updateTransaction } from "@/lib/transactions";
 
 interface ProductRow {
   id?: string;
@@ -311,6 +312,15 @@ export default function ServiceInvoice() {
             })
             .eq("id", editingId);
           if (error) throw error;
+
+          // Update split payments if they exist
+          const transaction = await getTransactionByReference("service_invoice", editingId);
+          if (transaction) {
+            await updateTransaction(transaction.id, form.splitPayments);
+          } else if (form.splitPayments.length > 0) {
+            // Create transaction if it doesn't exist
+            await createTransaction("service_invoice", editingId, payload.total, form.splitPayments);
+          }
         }
 
         const updated = invoices.map((item) =>
@@ -484,8 +494,12 @@ export default function ServiceInvoice() {
     }
   };
 
-  const handleEdit = (item: ServiceInvoiceRecord) => {
+  const handleEdit = async (item: ServiceInvoiceRecord) => {
     setEditingId(item.id);
+
+    // Load split payments from Supabase
+    const splitPayments = await getSplitPaymentsByReference("service_invoice", item.id);
+
     setForm({
       serviceInvoiceNo: item.serviceInvoiceNo,
       customerName: item.customerName,
@@ -503,7 +517,7 @@ export default function ServiceInvoice() {
         amount: p.amount,
         unit: p.unit,
       })),
-      splitPayments: [],
+      splitPayments: splitPayments,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -945,13 +959,25 @@ export default function ServiceInvoice() {
             </div>
 
             {/* Split Payment Section */}
-            <div className="border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Payment Details (Split Payments)</h3>
-              <SplitPaymentForm
-                totalAmount={calculateTotal(form.products, form.labourCharges, form.gstEnabled) || 0}
-                initialPayments={form.splitPayments}
-                onPaymentsChange={(payments) => setForm((prev) => ({ ...prev, splitPayments: payments }))}
-              />
+            <div className="border border-border rounded-lg p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Payment Details (Split Payments)</h3>
+                <SplitPaymentForm
+                  totalAmount={calculateTotal(form.products, form.labourCharges, form.gstEnabled) || 0}
+                  initialPayments={form.splitPayments}
+                  onPaymentsChange={(payments) => setForm((prev) => ({ ...prev, splitPayments: payments }))}
+                />
+              </div>
+
+              {form.splitPayments.length > 0 && (
+                <div className="border-t border-border pt-6">
+                  <h4 className="text-md font-semibold mb-4">Payment History</h4>
+                  <PaymentHistoryDisplay
+                    payments={form.splitPayments}
+                    totalAmount={calculateTotal(form.products, form.labourCharges, form.gstEnabled) || 0}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Submit Buttons */}

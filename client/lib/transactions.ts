@@ -187,3 +187,43 @@ export async function deleteTransaction(transactionId: string): Promise<boolean>
     return false;
   }
 }
+
+export async function getSplitPaymentsByReference(
+  referenceType: string,
+  referenceId: string
+): Promise<SplitPayment[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select(
+        `
+        split_payments (
+          amount,
+          mode_of_payment,
+          payment_date
+        )
+      `
+      )
+      .eq("reference_type", referenceType)
+      .eq("reference_id", referenceId)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Failed to get split payments:", error);
+      return [];
+    }
+
+    if (!data || !data.split_payments) return [];
+
+    return data.split_payments.map((sp: any) => ({
+      amount: sp.amount,
+      modeOfPayment: sp.mode_of_payment,
+      paymentDate: sp.payment_date,
+    }));
+  } catch (error) {
+    console.error("Error fetching split payments:", error);
+    return [];
+  }
+}
