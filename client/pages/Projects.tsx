@@ -69,10 +69,11 @@ export default function Projects() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [estimations, setEstimations] = useState<EstimationRecord[]>([]);
   const [estimationForm, setEstimationForm] = useState(DEFAULT_ESTIMATION_FORM);
-  const [estimationSplitPayments, setEstimationSplitPayments] = useState<SplitPayment[]>([]);
   const [editingEstimationId, setEditingEstimationId] = useState<string | null>(null);
   const [isLoadingEstimations, setIsLoadingEstimations] = useState(false);
   const [isSavingEstimation, setIsSavingEstimation] = useState(false);
+  const [projectSplitPayments, setProjectSplitPayments] = useState<SplitPayment[]>([]);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
 
   // Load projects and estimations from Supabase on mount
   useEffect(() => {
@@ -262,16 +263,6 @@ export default function Projects() {
               createdAt: new Date().toLocaleDateString(),
             };
 
-            // Create transaction with split payments
-            if (estimationSplitPayments.length > 0) {
-              await createTransaction(
-                "estimation",
-                data[0].id,
-                payload.amount,
-                estimationSplitPayments
-              );
-            }
-
             setEstimations((prev) => [created, ...prev]);
           } catch (supabaseError: any) {
             console.error("Error creating estimation in Supabase:", supabaseError?.message);
@@ -297,7 +288,6 @@ export default function Projects() {
       }
 
       setEstimationForm(DEFAULT_ESTIMATION_FORM);
-      setEstimationSplitPayments([]);
       setEditingEstimationId(null);
     } catch (error: any) {
       console.error("Error saving estimation:", error);
@@ -345,7 +335,6 @@ export default function Projects() {
   const cancelEditEstimation = () => {
     setEditingEstimationId(null);
     setEstimationForm(DEFAULT_ESTIMATION_FORM);
-    setEstimationSplitPayments([]);
   };
 
   const handleCreateProject = async (newProject: Omit<Project, "id" | "createdAt">) => {
@@ -426,8 +415,19 @@ export default function Projects() {
             createdAt: new Date(data[0].created_at).toLocaleDateString(),
           };
 
+          // Create transaction with split payments if any
+          if (projectSplitPayments.length > 0) {
+            await createTransaction(
+              "project",
+              data[0].id,
+              data[0].amount,
+              projectSplitPayments
+            );
+          }
+
           setProjects([dbProject, ...projects]);
           setIsModalOpen(false);
+          setProjectSplitPayments([]);
           return;
         } catch (supabaseError) {
           console.error("Error creating project in Supabase:", supabaseError);
@@ -474,6 +474,16 @@ export default function Projects() {
             .eq('id', id);
 
           if (error) throw error;
+
+          // Create or update transaction with split payments
+          if (projectSplitPayments.length > 0) {
+            await createTransaction(
+              "project",
+              id,
+              updatedData.amount,
+              projectSplitPayments
+            );
+          }
         } catch (supabaseError) {
           console.error("Error updating project in Supabase:", supabaseError);
           // Fall through to localStorage
@@ -491,6 +501,7 @@ export default function Projects() {
 
       setIsEditModalOpen(false);
       setEditingProject(null);
+      setProjectSplitPayments([]);
     } catch (error: any) {
       const errorMessage = error?.message || error?.error_description || JSON.stringify(error);
       console.error("Error updating project:", errorMessage);
@@ -760,6 +771,17 @@ export default function Projects() {
                 />
               </div>
 
+              {editingProjectId && editingProject && (
+                <div className="bg-card rounded-lg border border-border p-6">
+                  <h2 className="text-xl font-semibold mb-4">Payment Details (Split Payments)</h2>
+                  <SplitPaymentForm
+                    totalAmount={editingProject.amount || 0}
+                    initialPayments={projectSplitPayments}
+                    onPaymentsChange={(payments) => setProjectSplitPayments(payments)}
+                  />
+                </div>
+              )}
+
               {isLoading ? (
                 <div className="bg-card rounded-lg border border-border p-12 text-center">
                   <div className="space-y-4 max-w-md mx-auto">
@@ -867,6 +889,7 @@ export default function Projects() {
                               <button
                                 onClick={() => {
                                   setEditingProject(project);
+                                  setEditingProjectId(project.id);
                                   setIsEditModalOpen(true);
                                 }}
                                 className="inline-flex items-center gap-2 text-primary hover:text-primary/90 transition-colors font-medium text-sm whitespace-nowrap"
@@ -983,15 +1006,6 @@ export default function Projects() {
                     onChange={(e) => setEstimationForm((prev) => ({ ...prev, leadSource: e.target.value }))}
                   />
 
-                  <div className="md:col-span-2 border border-border rounded-lg p-4">
-                    <h3 className="font-semibold text-sm mb-4">Payment Breakdown (Split Payments)</h3>
-                    <SplitPaymentForm
-                      totalAmount={parseFloat(estimationForm.amount as string) || 0}
-                      initialPayments={estimationSplitPayments}
-                      onPaymentsChange={(payments) => setEstimationSplitPayments(payments)}
-                    />
-                  </div>
-
                   <button
                     type="submit"
                     disabled={isSavingEstimation}
@@ -1091,6 +1105,8 @@ export default function Projects() {
         onClose={() => {
           setIsEditModalOpen(false);
           setEditingProject(null);
+          setEditingProjectId(null);
+          setProjectSplitPayments([]);
         }}
         onUpdateProject={handleUpdateProject}
         project={editingProject}
