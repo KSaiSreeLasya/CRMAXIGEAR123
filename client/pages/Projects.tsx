@@ -9,7 +9,8 @@ import EditProjectModal from "@/components/EditProjectModal";
 import { supabase } from "@/lib/supabase";
 import { ImportExport } from "@/components/ImportExport";
 import { SplitPaymentForm, type SplitPayment } from "@/components/SplitPaymentForm";
-import { createTransaction } from "@/lib/transactions";
+import { SplitPaymentSummary } from "@/components/SplitPaymentSummary";
+import { createTransaction, getTransactionByReference } from "@/lib/transactions";
 
 interface EstimationRecord {
   id: string;
@@ -74,6 +75,7 @@ export default function Projects() {
   const [isSavingEstimation, setIsSavingEstimation] = useState(false);
   const [projectSplitPayments, setProjectSplitPayments] = useState<SplitPayment[]>([]);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [loadedSplitPayments, setLoadedSplitPayments] = useState<Record<string, SplitPayment[]>>({});
 
   // Load projects and estimations from Supabase on mount
   useEffect(() => {
@@ -337,7 +339,32 @@ export default function Projects() {
     setEstimationForm(DEFAULT_ESTIMATION_FORM);
   };
 
-  const handleCreateProject = async (newProject: Omit<Project, "id" | "createdAt">) => {
+  const loadSplitPaymentsForProject = async (projectId: string) => {
+    try {
+      if (loadedSplitPayments[projectId]) {
+        setProjectSplitPayments(loadedSplitPayments[projectId]);
+        return;
+      }
+
+      const transaction = await getTransactionByReference("project", projectId);
+      if (transaction && transaction.split_payments) {
+        const splitPaymentsList: SplitPayment[] = transaction.split_payments.map((sp) => ({
+          amount: sp.amount,
+          modeOfPayment: sp.mode_of_payment as "Cash" | "Card" | "UPI" | "Cheque" | "Other",
+          paymentDate: sp.payment_date,
+        }));
+        setLoadedSplitPayments((prev) => ({
+          ...prev,
+          [projectId]: splitPaymentsList,
+        }));
+        setProjectSplitPayments(splitPaymentsList);
+      }
+    } catch (error) {
+      console.error("Error loading split payments:", error);
+    }
+  };
+
+  const handleCreateProject = async (newProject: Omit<Project, "id" | "createdAt">, splitPayments: SplitPayment[] = []) => {
     try {
       const createdProject: Project = {
         id: `project_${Date.now()}`,
@@ -416,18 +443,17 @@ export default function Projects() {
           };
 
           // Create transaction with split payments if any
-          if (projectSplitPayments.length > 0) {
+          if (splitPayments.length > 0) {
             await createTransaction(
               "project",
               data[0].id,
               data[0].amount,
-              projectSplitPayments
+              splitPayments
             );
           }
 
           setProjects([dbProject, ...projects]);
           setIsModalOpen(false);
-          setProjectSplitPayments([]);
           return;
         } catch (supabaseError) {
           console.error("Error creating project in Supabase:", supabaseError);
@@ -772,13 +798,21 @@ export default function Projects() {
               </div>
 
               {editingProjectId && editingProject && (
-                <div className="bg-card rounded-lg border border-border p-6">
-                  <h2 className="text-xl font-semibold mb-4">Payment Details (Split Payments)</h2>
-                  <SplitPaymentForm
-                    totalAmount={editingProject.amount || 0}
-                    initialPayments={projectSplitPayments}
-                    onPaymentsChange={(payments) => setProjectSplitPayments(payments)}
-                  />
+                <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">Payment Details (Split Payments)</h2>
+                    <SplitPaymentForm
+                      totalAmount={editingProject.amount || 0}
+                      initialPayments={projectSplitPayments}
+                      onPaymentsChange={(payments) => setProjectSplitPayments(payments)}
+                    />
+                  </div>
+                  {projectSplitPayments.length > 0 && (
+                    <SplitPaymentSummary
+                      payments={projectSplitPayments}
+                      totalAmount={editingProject.amount || 0}
+                    />
+                  )}
                 </div>
               )}
 
@@ -890,6 +924,7 @@ export default function Projects() {
                                 onClick={() => {
                                   setEditingProject(project);
                                   setEditingProjectId(project.id);
+                                  void loadSplitPaymentsForProject(project.id);
                                   setIsEditModalOpen(true);
                                 }}
                                 className="inline-flex items-center gap-2 text-primary hover:text-primary/90 transition-colors font-medium text-sm whitespace-nowrap"

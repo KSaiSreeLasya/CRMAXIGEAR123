@@ -945,13 +945,43 @@ export default function ServiceInvoice() {
             </div>
 
             {/* Split Payment Section */}
-            <div className="border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Payment Details (Split Payments)</h3>
-              <SplitPaymentForm
-                totalAmount={calculateTotal(form.products, form.labourCharges, form.gstEnabled) || 0}
-                initialPayments={form.splitPayments}
-                onPaymentsChange={(payments) => setForm((prev) => ({ ...prev, splitPayments: payments }))}
-              />
+            <div className="border border-border rounded-lg p-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Payment Details (Split Payments)</h3>
+                <SplitPaymentForm
+                  totalAmount={calculateTotal(form.products, form.labourCharges, form.gstEnabled) || 0}
+                  initialPayments={form.splitPayments}
+                  onPaymentsChange={(payments) => setForm((prev) => ({ ...prev, splitPayments: payments }))}
+                />
+              </div>
+              {form.splitPayments.length > 0 && (
+                <div className="border-t border-border pt-4">
+                  <h4 className="font-semibold text-sm mb-3">Payment Summary</h4>
+                  <div className="space-y-2 text-sm">
+                    {Object.entries(
+                      form.splitPayments.reduce(
+                        (acc, payment) => {
+                          const mode = payment.modeOfPayment;
+                          acc[mode] = (acc[mode] || 0) + payment.amount;
+                          return acc;
+                        },
+                        {} as Record<string, number>
+                      )
+                    ).map(([mode, amount]) => (
+                      <div key={mode} className="flex justify-between">
+                        <span className="text-muted-foreground">{mode}:</span>
+                        <span className="font-medium">₹{amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="border-t border-border pt-2 mt-2 flex justify-between font-medium">
+                      <span>Total Paid:</span>
+                      <span className="text-success">
+                        ₹{form.splitPayments.reduce((sum, p) => sum + p.amount, 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Submit Buttons */}
