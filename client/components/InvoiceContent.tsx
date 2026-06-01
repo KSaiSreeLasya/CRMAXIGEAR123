@@ -1,10 +1,12 @@
 import type { Project } from "@/pages/Projects";
+import type { SplitPayment } from "@/components/SplitPaymentForm";
 
 interface InvoiceContentProps {
   project: Project;
   invoiceNo: string;
   gstType: "igst" | "cgst-sgst";
   placeOfSupply: string;
+  splitPayments?: SplitPayment[];
   forPrint?: boolean;
 }
 
@@ -38,6 +40,7 @@ export default function InvoiceContent({
   invoiceNo,
   gstType,
   placeOfSupply,
+  splitPayments = [],
   forPrint = false,
 }: InvoiceContentProps) {
   // Amount saved in CRM is GST-inclusive. Invoice shows taxable value + GST split.
@@ -286,6 +289,26 @@ export default function InvoiceContent({
           </div>
         </div>
       </div>
+
+      {/* Payment Breakdown */}
+      {splitPayments && splitPayments.length > 0 && (
+        <div className="mb-4 grid grid-cols-2 gap-6">
+          <div></div>
+          <div className="space-y-2 bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+            <h3 className="font-bold text-sm text-gray-800 mb-3">Payment Breakdown</h3>
+            {splitPayments.map((payment, index) => (
+              <div key={index} className="flex justify-between text-sm">
+                <span className="text-gray-700">
+                  {payment.modeOfPayment}
+                </span>
+                <span className="font-semibold text-gray-800">
+                  ₹{payment.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Amount in Words */}
       <div className="mb-4 p-3 bg-green-50 border-2 border-green-300 rounded">

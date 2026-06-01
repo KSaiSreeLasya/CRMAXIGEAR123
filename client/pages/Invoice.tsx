@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import InvoiceContent from "@/components/InvoiceContent";
 import type { Project } from "./Projects";
 import { supabase } from "@/lib/supabase";
+import type { SplitPayment } from "@/components/SplitPaymentForm";
 
 export default function Invoice() {
   const { projectId } = useParams();
@@ -15,6 +16,7 @@ export default function Invoice() {
   const [invoiceNo, setInvoiceNo] = useState("");
   const [gstType, setGstType] = useState<"igst" | "cgst-sgst">("cgst-sgst");
   const [placeOfSupply, setPlaceOfSupply] = useState<string>("TG");
+  const [splitPayments, setSplitPayments] = useState<SplitPayment[]>([]);
   const settingsKey = projectId ? `crm_invoice_settings_${projectId}` : null;
 
   useEffect(() => {
@@ -99,6 +101,36 @@ export default function Invoice() {
               createdAt: new Date(data.created_at).toLocaleDateString(),
             };
             setProject(project);
+
+            // Load split payments
+            try {
+              const { data: txData } = await supabase
+                .from('transactions')
+                .select(`
+                  id,
+                  split_payments (
+                    amount,
+                    mode_of_payment,
+                    payment_date
+                  )
+                `)
+                .eq('reference_type', 'project')
+                .eq('reference_id', projectId)
+                .single();
+
+              if (txData?.split_payments) {
+                setSplitPayments(
+                  txData.split_payments.map((sp: any) => ({
+                    amount: sp.amount,
+                    modeOfPayment: sp.mode_of_payment,
+                    paymentDate: sp.payment_date,
+                  }))
+                );
+              }
+            } catch (splitPaymentError) {
+              console.log("No split payments found:", splitPaymentError);
+            }
+
             return;
           }
         } catch (supabaseError) {
@@ -120,6 +152,9 @@ export default function Invoice() {
             modeOfPayment: foundProject.modeOfPayment ?? "Cash",
             leadSource: foundProject.leadSource ?? "",
           });
+          if (foundProject.splitPayments) {
+            setSplitPayments(foundProject.splitPayments);
+          }
         }
       }
     } catch (error) {
