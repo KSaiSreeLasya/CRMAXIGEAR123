@@ -121,7 +121,7 @@ export default function Invoice() {
               if (txData?.split_payments) {
                 setSplitPayments(
                   txData.split_payments.map((sp: any) => ({
-                    amount: sp.amount,
+                    amount: sp.amount ? (typeof sp.amount === 'string' ? parseFloat(sp.amount) : Number(sp.amount)) : 0,
                     modeOfPayment: sp.mode_of_payment,
                     paymentDate: sp.payment_date,
                   }))

@@ -22,12 +22,9 @@ export function SplitPaymentForm({
   initialPayments = [],
   disabled = false,
 }: SplitPaymentFormProps) {
-  // Filter out zero-amount payments that aren't real payment records
-  const validInitialPayments = initialPayments.filter(p => p.amount > 0);
-
   const [payments, setPayments] = useState<SplitPayment[]>(
-    validInitialPayments.length > 0
-      ? validInitialPayments
+    initialPayments.length > 0
+      ? initialPayments
       : [{ amount: 0, modeOfPayment: "Cash", paymentDate: new Date().toISOString().split("T")[0] }]
   );
 

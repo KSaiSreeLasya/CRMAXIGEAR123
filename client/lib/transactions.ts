@@ -262,7 +262,7 @@ export async function getSplitPaymentsByReference(
     if (payments && payments.length > 0) {
       console.log(`Loaded ${payments.length} split payments for transaction ${transaction.id}:`, payments);
       return payments.map((sp: any) => ({
-        amount: sp.amount,
+        amount: sp.amount ? (typeof sp.amount === 'string' ? parseFloat(sp.amount) : Number(sp.amount)) : 0,
         modeOfPayment: sp.mode_of_payment,
         paymentDate: sp.payment_date,
       }));
