@@ -1041,6 +1041,9 @@ export default function Projects() {
                     <option value="Cash">Cash</option>
                     <option value="Card">Card</option>
                     <option value="UPI">UPI</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Bajaj">Bajaj</option>
+                    <option value="NEFT">NEFT</option>
                   </select>
                   <input
                     className="px-4 py-2 border border-border rounded-lg bg-background"
