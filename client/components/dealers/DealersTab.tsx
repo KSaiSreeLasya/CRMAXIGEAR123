@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/table";
 
 interface Dealer {
-  id: string;
+  id?: string;
   name: string;
-  contactNo: string;
+  contact_no: string;
   address: string;
 }
 
@@ -35,7 +35,7 @@ export default function DealersTab({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name && contactNo && address) {
-      onAddDealer({ name, contactNo, address });
+      onAddDealer({ name, contact_no: contactNo, address });
       setName("");
       setContactNo("");
       setAddress("");

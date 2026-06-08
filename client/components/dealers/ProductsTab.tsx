@@ -11,32 +11,32 @@ import {
 } from "@/components/ui/table";
 
 interface Dealer {
-  id: string;
+  id?: string;
   name: string;
-  contactNo: string;
+  contact_no: string;
   address: string;
 }
 
 interface Product {
-  id: string;
-  modelNo: string;
-  dealerName: string;
-  dealerCode: string;
-  contactNo: string;
+  id?: string;
+  model_no: string;
+  dealer_name: string;
+  dealer_code: string;
+  contact_no: string;
   location: string;
-  productDescription: string;
-  hsnNo: string;
-  noOfVehicles: string;
-  chassisNo: string;
-  motorNo: string;
-  batteryNo: string;
-  batteryVehicleSpecs: string;
-  batteryWarranty: string;
-  batteryCapacity: string;
-  vehicleWarranty: string;
-  invoiceDate: string;
-  amount: string;
-  modeOfPayment: string;
+  product_description: string;
+  hsn_no: string;
+  no_of_vehicles: number;
+  chassis_no: string;
+  motor_no: string;
+  battery_no: string;
+  battery_vehicle_specs: string;
+  battery_warranty: string;
+  battery_capacity: string;
+  vehicle_warranty: string;
+  invoice_date: string;
+  amount: number;
+  mode_of_payment: string;
 }
 
 interface ProductsTabProps {
@@ -54,29 +54,29 @@ export default function ProductsTab({
 }: ProductsTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Omit<Product, "id">>({
-    modelNo: "",
-    dealerName: "",
-    dealerCode: "",
-    contactNo: "",
+    model_no: "",
+    dealer_name: "",
+    dealer_code: "",
+    contact_no: "",
     location: "",
-    productDescription: "",
-    hsnNo: "",
-    noOfVehicles: "",
-    chassisNo: "",
-    motorNo: "",
-    batteryNo: "",
-    batteryVehicleSpecs: "",
-    batteryWarranty: "",
-    batteryCapacity: "",
-    vehicleWarranty: "",
-    invoiceDate: "",
-    amount: "",
-    modeOfPayment: "",
+    product_description: "",
+    hsn_no: "",
+    no_of_vehicles: 0,
+    chassis_no: "",
+    motor_no: "",
+    battery_no: "",
+    battery_vehicle_specs: "",
+    battery_warranty: "",
+    battery_capacity: "",
+    vehicle_warranty: "",
+    invoice_date: "",
+    amount: 0,
+    mode_of_payment: "",
   });
 
   const handleChange = (
     field: keyof Omit<Product, "id">,
-    value: string
+    value: string | number
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -86,27 +86,27 @@ export default function ProductsTab({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.modelNo && formData.dealerName) {
+    if (formData.model_no && formData.dealer_name) {
       onAddProduct(formData);
       setFormData({
-        modelNo: "",
-        dealerName: "",
-        dealerCode: "",
-        contactNo: "",
+        model_no: "",
+        dealer_name: "",
+        dealer_code: "",
+        contact_no: "",
         location: "",
-        productDescription: "",
-        hsnNo: "",
-        noOfVehicles: "",
-        chassisNo: "",
-        motorNo: "",
-        batteryNo: "",
-        batteryVehicleSpecs: "",
-        batteryWarranty: "",
-        batteryCapacity: "",
-        vehicleWarranty: "",
-        invoiceDate: "",
-        amount: "",
-        modeOfPayment: "",
+        product_description: "",
+        hsn_no: "",
+        no_of_vehicles: 0,
+        chassis_no: "",
+        motor_no: "",
+        battery_no: "",
+        battery_vehicle_specs: "",
+        battery_warranty: "",
+        battery_capacity: "",
+        vehicle_warranty: "",
+        invoice_date: "",
+        amount: 0,
+        mode_of_payment: "",
       });
       setShowForm(false);
     }
@@ -129,8 +129,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.modelNo}
-                    onChange={(e) => handleChange("modelNo", e.target.value)}
+                    value={formData.model_no}
+                    onChange={(e) => handleChange("model_no", e.target.value)}
                     placeholder="Enter model number"
                     required
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -142,8 +142,8 @@ export default function ProductsTab({
                     Dealer Name
                   </label>
                   <select
-                    value={formData.dealerName}
-                    onChange={(e) => handleChange("dealerName", e.target.value)}
+                    value={formData.dealer_name}
+                    onChange={(e) => handleChange("dealer_name", e.target.value)}
                     required
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
@@ -162,8 +162,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.dealerCode}
-                    onChange={(e) => handleChange("dealerCode", e.target.value)}
+                    value={formData.dealer_code}
+                    onChange={(e) => handleChange("dealer_code", e.target.value)}
                     placeholder="Enter dealer code"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -175,8 +175,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="tel"
-                    value={formData.contactNo}
-                    onChange={(e) => handleChange("contactNo", e.target.value)}
+                    value={formData.contact_no}
+                    onChange={(e) => handleChange("contact_no", e.target.value)}
                     placeholder="Enter contact number"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -201,9 +201,9 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.productDescription}
+                    value={formData.product_description}
                     onChange={(e) =>
-                      handleChange("productDescription", e.target.value)
+                      handleChange("product_description", e.target.value)
                     }
                     placeholder="Enter product description"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -216,8 +216,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.hsnNo}
-                    onChange={(e) => handleChange("hsnNo", e.target.value)}
+                    value={formData.hsn_no}
+                    onChange={(e) => handleChange("hsn_no", e.target.value)}
                     placeholder="Enter HSN number"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -229,8 +229,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="number"
-                    value={formData.noOfVehicles}
-                    onChange={(e) => handleChange("noOfVehicles", e.target.value)}
+                    value={formData.no_of_vehicles}
+                    onChange={(e) => handleChange("no_of_vehicles", parseInt(e.target.value))}
                     placeholder="Enter number of vehicles"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -248,8 +248,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.chassisNo}
-                    onChange={(e) => handleChange("chassisNo", e.target.value)}
+                    value={formData.chassis_no}
+                    onChange={(e) => handleChange("chassis_no", e.target.value)}
                     placeholder="Enter chassis number"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -261,8 +261,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.motorNo}
-                    onChange={(e) => handleChange("motorNo", e.target.value)}
+                    value={formData.motor_no}
+                    onChange={(e) => handleChange("motor_no", e.target.value)}
                     placeholder="Enter motor number"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -274,8 +274,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.batteryNo}
-                    onChange={(e) => handleChange("batteryNo", e.target.value)}
+                    value={formData.battery_no}
+                    onChange={(e) => handleChange("battery_no", e.target.value)}
                     placeholder="Enter battery number"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -293,9 +293,9 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.batteryVehicleSpecs}
+                    value={formData.battery_vehicle_specs}
                     onChange={(e) =>
-                      handleChange("batteryVehicleSpecs", e.target.value)
+                      handleChange("battery_vehicle_specs", e.target.value)
                     }
                     placeholder="Enter specifications"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -308,9 +308,9 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.batteryWarranty}
+                    value={formData.battery_warranty}
                     onChange={(e) =>
-                      handleChange("batteryWarranty", e.target.value)
+                      handleChange("battery_warranty", e.target.value)
                     }
                     placeholder="Enter battery warranty"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -323,9 +323,9 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.batteryCapacity}
+                    value={formData.battery_capacity}
                     onChange={(e) =>
-                      handleChange("batteryCapacity", e.target.value)
+                      handleChange("battery_capacity", e.target.value)
                     }
                     placeholder="Enter battery capacity"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -338,9 +338,9 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="text"
-                    value={formData.vehicleWarranty}
+                    value={formData.vehicle_warranty}
                     onChange={(e) =>
-                      handleChange("vehicleWarranty", e.target.value)
+                      handleChange("vehicle_warranty", e.target.value)
                     }
                     placeholder="Enter vehicle warranty"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -359,8 +359,8 @@ export default function ProductsTab({
                   </label>
                   <input
                     type="date"
-                    value={formData.invoiceDate}
-                    onChange={(e) => handleChange("invoiceDate", e.target.value)}
+                    value={formData.invoice_date}
+                    onChange={(e) => handleChange("invoice_date", e.target.value)}
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
@@ -372,7 +372,7 @@ export default function ProductsTab({
                   <input
                     type="number"
                     value={formData.amount}
-                    onChange={(e) => handleChange("amount", e.target.value)}
+                    onChange={(e) => handleChange("amount", parseFloat(e.target.value))}
                     placeholder="Enter amount"
                     step="0.01"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -384,9 +384,9 @@ export default function ProductsTab({
                     Mode of Payment
                   </label>
                   <select
-                    value={formData.modeOfPayment}
+                    value={formData.mode_of_payment}
                     onChange={(e) =>
-                      handleChange("modeOfPayment", e.target.value)
+                      handleChange("mode_of_payment", e.target.value)
                     }
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
@@ -465,23 +465,23 @@ export default function ProductsTab({
               <TableBody>
                 {products.map((product) => (
                   <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.modelNo}</TableCell>
-                    <TableCell>{product.dealerName}</TableCell>
-                    <TableCell>{product.dealerCode}</TableCell>
-                    <TableCell>{product.contactNo}</TableCell>
+                    <TableCell className="font-medium">{product.model_no}</TableCell>
+                    <TableCell>{product.dealer_name}</TableCell>
+                    <TableCell>{product.dealer_code}</TableCell>
+                    <TableCell>{product.contact_no}</TableCell>
                     <TableCell>{product.location}</TableCell>
-                    <TableCell>{product.productDescription}</TableCell>
-                    <TableCell>{product.hsnNo}</TableCell>
-                    <TableCell>{product.noOfVehicles}</TableCell>
-                    <TableCell>{product.chassisNo}</TableCell>
-                    <TableCell>{product.motorNo}</TableCell>
-                    <TableCell>{product.batteryNo}</TableCell>
-                    <TableCell>{product.invoiceDate}</TableCell>
+                    <TableCell>{product.product_description}</TableCell>
+                    <TableCell>{product.hsn_no}</TableCell>
+                    <TableCell>{product.no_of_vehicles}</TableCell>
+                    <TableCell>{product.chassis_no}</TableCell>
+                    <TableCell>{product.motor_no}</TableCell>
+                    <TableCell>{product.battery_no}</TableCell>
+                    <TableCell>{product.invoice_date}</TableCell>
                     <TableCell>{product.amount}</TableCell>
-                    <TableCell>{product.modeOfPayment}</TableCell>
+                    <TableCell>{product.mode_of_payment}</TableCell>
                     <TableCell className="text-right">
                       <button
-                        onClick={() => onDeleteProduct(product.id)}
+                        onClick={() => onDeleteProduct(product.id!)}
                         className="inline-flex items-center gap-2 text-destructive hover:text-destructive/80 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />

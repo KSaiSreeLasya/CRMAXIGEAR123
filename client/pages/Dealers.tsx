@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -6,41 +6,63 @@ import { ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DealersTab from "@/components/dealers/DealersTab";
 import ProductsTab from "@/components/dealers/ProductsTab";
+import {
+  fetchDealers,
+  addDealer as dbAddDealer,
+  deleteDealer as dbDeleteDealer,
+  fetchProducts,
+  addProduct as dbAddProduct,
+  deleteProduct as dbDeleteProduct,
+  Dealer,
+} from "@/lib/dealers";
 
 export default function Dealers() {
   const navigate = useNavigate();
-  const [dealers, setDealers] = useState<
-    Array<{ id: string; name: string; contactNo: string; address: string }>
-  >([]);
+  const [dealers, setDealers] = useState<Dealer[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [products, setProducts] = useState<Array<any>>([]);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const addDealer = (dealer: {
-    name: string;
-    contactNo: string;
-    address: string;
-  }) => {
-    const newDealer = {
-      id: Date.now().toString(),
-      ...dealer,
-    };
-    setDealers([...dealers, newDealer]);
+  const loadData = async () => {
+    setLoading(true);
+    const [dealersData, productsData] = await Promise.all([
+      fetchDealers(),
+      fetchProducts(),
+    ]);
+    setDealers(dealersData);
+    setProducts(productsData);
+    setLoading(false);
   };
 
-  const deleteDealer = (id: string) => {
-    setDealers(dealers.filter((d) => d.id !== id));
+  const addDealer = async (dealer: Omit<Dealer, "id">) => {
+    const newDealer = await dbAddDealer(dealer);
+    if (newDealer) {
+      setDealers([...dealers, newDealer]);
+    }
   };
 
-  const addProduct = (product: any) => {
-    const newProduct = {
-      id: Date.now().toString(),
-      ...product,
-    };
-    setProducts([...products, newProduct]);
+  const deleteDealer = async (id: string) => {
+    const success = await dbDeleteDealer(id);
+    if (success) {
+      setDealers(dealers.filter((d) => d.id !== id));
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(products.filter((p) => p.id !== id));
+  const addProduct = async (product: any) => {
+    const newProduct = await dbAddProduct(product);
+    if (newProduct) {
+      setProducts([...products, newProduct]);
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    const success = await dbDeleteProduct(id);
+    if (success) {
+      setProducts(products.filter((p) => p.id !== id));
+    }
   };
 
   return (
@@ -64,29 +86,35 @@ export default function Dealers() {
             </Button>
           </div>
 
-          <Tabs defaultValue="dealers" className="w-full">
-            <TabsList>
-              <TabsTrigger value="dealers">Dealers</TabsTrigger>
-              <TabsTrigger value="products">Products</TabsTrigger>
-            </TabsList>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading data...</p>
+            </div>
+          ) : (
+            <Tabs defaultValue="dealers" className="w-full">
+              <TabsList>
+                <TabsTrigger value="dealers">Dealers</TabsTrigger>
+                <TabsTrigger value="products">Products</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="dealers" className="space-y-6">
-              <DealersTab
-                dealers={dealers}
-                onAddDealer={addDealer}
-                onDeleteDealer={deleteDealer}
-              />
-            </TabsContent>
+              <TabsContent value="dealers" className="space-y-6">
+                <DealersTab
+                  dealers={dealers}
+                  onAddDealer={addDealer}
+                  onDeleteDealer={deleteDealer}
+                />
+              </TabsContent>
 
-            <TabsContent value="products" className="space-y-6">
-              <ProductsTab
-                dealers={dealers}
-                products={products}
-                onAddProduct={addProduct}
-                onDeleteProduct={deleteProduct}
-              />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="products" className="space-y-6">
+                <ProductsTab
+                  dealers={dealers}
+                  products={products}
+                  onAddProduct={addProduct}
+                  onDeleteProduct={deleteProduct}
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </div>
     </Layout>
