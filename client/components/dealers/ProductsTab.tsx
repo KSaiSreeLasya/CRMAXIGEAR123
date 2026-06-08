@@ -392,10 +392,11 @@ export default function ProductsTab({
                   >
                     <option value="">Select Payment Mode</option>
                     <option value="Cash">Cash</option>
-                    <option value="Check">Check</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Credit Card">Credit Card</option>
+                    <option value="Card">Card</option>
                     <option value="UPI">UPI</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Bajaj">Bajaj</option>
+                    <option value="NEFT">NEFT</option>
                   </select>
                 </div>
               </div>

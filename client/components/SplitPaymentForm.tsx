@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export interface SplitPayment {
   amount: number;
-  modeOfPayment: "Cash" | "Card" | "UPI" | "Cheque" | "Other";
+  modeOfPayment: "Cash" | "Card" | "UPI" | "Cheque" | "Bajaj" | "NEFT" | "Other";
   paymentDate: string;
 }
 
@@ -35,7 +35,7 @@ export function SplitPaymentForm({
     }
   }, [initialPayments]);
 
-  const paymentMethods = ["Cash", "Card", "UPI", "Cheque", "Other"] as const;
+  const paymentMethods = ["Cash", "Card", "UPI", "Cheque", "Bajaj", "NEFT"] as const;
   const totalPaid = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
   const remainingAmount = Math.max(0, totalAmount - totalPaid);
   const isFullyPaid = remainingAmount === 0;
