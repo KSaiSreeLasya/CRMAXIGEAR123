@@ -794,6 +794,9 @@ export default function ServiceInvoice() {
                   <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
                   <option value="UPI">UPI</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Bajaj">Bajaj</option>
+                  <option value="NEFT">NEFT</option>
                 </select>
               </div>
               <div className="space-y-2">
