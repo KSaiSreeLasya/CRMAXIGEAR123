@@ -6,6 +6,7 @@ interface InventoryItem {
   sales_count: number;
   closing_stock: number;
   chassis_no: string;
+  previous_chassis_no: string;
   model_no: string;
 }
 
@@ -37,10 +38,17 @@ export async function deductInventoryForSale(
         (c: string) => c.toLowerCase() !== chassisNo.toLowerCase()
       );
 
+      const previousChassisArray = item.previousChassisNo
+        ? item.previousChassisNo.split(",").map((c: string) => c.trim())
+        : [];
+
+      previousChassisArray.push(chassisNo);
+
       items[itemIndex] = {
         ...item,
         salesCount: (item.salesCount || 0) + 1,
-        chassisNo: filteredChassis.join(", "),
+        chassisNo: filteredChassis.length > 0 ? filteredChassis.join(", ") : "",
+        previousChassisNo: previousChassisArray.join(", "),
         closingStock: item.vehicleCount - ((item.salesCount || 0) + 1),
       };
 
@@ -51,7 +59,7 @@ export async function deductInventoryForSale(
     // Fetch inventory item by model_no
     const { data: inventoryData, error: fetchError } = await supabase
       .from("inventory_items")
-      .select("id, vehicle_count, sales_count, closing_stock, chassis_no, model_no")
+      .select("id, vehicle_count, sales_count, closing_stock, chassis_no, previous_chassis_no, model_no")
       .ilike("model_no", `%${modelNo}%`)
       .single();
 
@@ -73,6 +81,12 @@ export async function deductInventoryForSale(
       (c) => c.toLowerCase() !== chassisNo.toLowerCase()
     );
 
+    const previousChassisArray = item.previous_chassis_no
+      ? item.previous_chassis_no.split(",").map((c) => c.trim())
+      : [];
+
+    previousChassisArray.push(chassisNo);
+
     const newSalesCount = (item.sales_count || 0) + 1;
     const newClosingStock = item.vehicle_count - newSalesCount;
 
@@ -81,6 +95,7 @@ export async function deductInventoryForSale(
       .update({
         sales_count: newSalesCount,
         chassis_no: filteredChassis.length > 0 ? filteredChassis.join(", ") : null,
+        previous_chassis_no: previousChassisArray.length > 0 ? previousChassisArray.join(", ") : null,
         closing_stock: newClosingStock,
       })
       .eq("id", item.id);
@@ -120,10 +135,19 @@ export async function restoreInventoryForDeletedSale(
         chassisArray.push(chassisNo);
       }
 
+      const previousChassisArray = item.previousChassisNo
+        ? item.previousChassisNo.split(",").map((c: string) => c.trim())
+        : [];
+
+      const filteredPreviousChassis = previousChassisArray.filter(
+        (c: string) => c.toLowerCase() !== chassisNo.toLowerCase()
+      );
+
       items[itemIndex] = {
         ...item,
         salesCount: Math.max(0, (item.salesCount || 0) - 1),
         chassisNo: chassisArray.join(", "),
+        previousChassisNo: filteredPreviousChassis.length > 0 ? filteredPreviousChassis.join(", ") : "",
         closingStock: item.vehicleCount - Math.max(0, (item.salesCount || 0) - 1),
       };
 
@@ -133,7 +157,7 @@ export async function restoreInventoryForDeletedSale(
 
     const { data: inventoryData, error: fetchError } = await supabase
       .from("inventory_items")
-      .select("id, vehicle_count, sales_count, closing_stock, chassis_no, model_no")
+      .select("id, vehicle_count, sales_count, closing_stock, chassis_no, previous_chassis_no, model_no")
       .ilike("model_no", `%${modelNo}%`)
       .single();
 
@@ -151,6 +175,14 @@ export async function restoreInventoryForDeletedSale(
       chassisArray.push(chassisNo);
     }
 
+    const previousChassisArray = item.previous_chassis_no
+      ? item.previous_chassis_no.split(",").map((c) => c.trim())
+      : [];
+
+    const filteredPreviousChassis = previousChassisArray.filter(
+      (c) => c.toLowerCase() !== chassisNo.toLowerCase()
+    );
+
     const newSalesCount = Math.max(0, (item.sales_count || 0) - 1);
     const newClosingStock = item.vehicle_count - newSalesCount;
 
@@ -159,6 +191,7 @@ export async function restoreInventoryForDeletedSale(
       .update({
         sales_count: newSalesCount,
         chassis_no: chassisArray.length > 0 ? chassisArray.join(", ") : null,
+        previous_chassis_no: filteredPreviousChassis.length > 0 ? filteredPreviousChassis.join(", ") : null,
         closing_stock: newClosingStock,
       })
       .eq("id", item.id);

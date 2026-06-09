@@ -18,6 +18,7 @@ interface InventoryItem {
   hsnNo: string;
   vehicleCount: number;
   chassisNo: string;
+  previousChassisNo: string;
   motorNo: string;
   batteryNo: string;
   manufacturerInvNo: string;
@@ -73,6 +74,7 @@ export default function Inventory() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [chassisFilter, setChassisFilter] = useState<"all" | "current" | "previous">("all");
 
   const [spares, setSpares] = useState<SpareItem[]>([]);
   const [spareForm, setSpareForm] = useState(DEFAULT_SPARE_FORM);
@@ -115,6 +117,7 @@ export default function Inventory() {
               hsnNo: row.hsn_no || "",
               vehicleCount: row.vehicle_count || 0,
               chassisNo: row.chassis_no || "",
+              previousChassisNo: row.previous_chassis_no || "",
               motorNo: row.motor_no || "",
               batteryNo: row.battery_no || "",
               manufacturerInvNo: row.manufacturer_inv_no || "",
@@ -311,30 +314,32 @@ export default function Inventory() {
             if (error) throw error;
 
             const created: InventoryItem = {
-              id: data.id,
-              slNo: data.sl_no,
-              modelNo: data.model_no || "",
-              brand: data.brand || "",
-              vehicleModel: data.vehicle_model || "",
-              hsnNo: data.hsn_no || "",
-              vehicleCount: data.vehicle_count || 0,
-              chassisNo: data.chassis_no || "",
-              motorNo: data.motor_no || "",
-              batteryNo: data.battery_no || "",
-              manufacturerInvNo: data.manufacturer_inv_no || "",
-              batteryModel: data.battery_model || "",
-              batteryCount: data.battery_count || 0,
-              salesCount: data.sales_count || 0,
-              closingStock: data.closing_stock || 0,
-              createdAt: new Date(data.created_at).toLocaleDateString(),
-            };
-            setItems((prev) => [...prev, created].sort((a, b) => a.slNo - b.slNo));
+            id: data.id,
+            slNo: data.sl_no,
+            modelNo: data.model_no || "",
+            brand: data.brand || "",
+            vehicleModel: data.vehicle_model || "",
+            hsnNo: data.hsn_no || "",
+            vehicleCount: data.vehicle_count || 0,
+            chassisNo: data.chassis_no || "",
+            previousChassisNo: data.previous_chassis_no || "",
+            motorNo: data.motor_no || "",
+            batteryNo: data.battery_no || "",
+            manufacturerInvNo: data.manufacturer_inv_no || "",
+            batteryModel: data.battery_model || "",
+            batteryCount: data.battery_count || 0,
+            salesCount: data.sales_count || 0,
+            closingStock: data.closing_stock || 0,
+            createdAt: new Date(data.created_at).toLocaleDateString(),
+          };
+          setItems((prev) => [...prev, created].sort((a, b) => a.slNo - b.slNo));
           } catch (supabaseError: any) {
             console.warn("Supabase insert failed, falling back to localStorage:", supabaseError?.message);
             const created: InventoryItem = {
               id: `inventory_${Date.now()}`,
               createdAt: new Date().toLocaleDateString(),
               ...payload,
+              previousChassisNo: "",
             };
             persistLocal([...items, created].sort((a, b) => a.slNo - b.slNo));
           }
@@ -389,7 +394,7 @@ export default function Inventory() {
       batteryCount: String(item.batteryCount),
       salesCount: String(item.salesCount),
     });
-    // Parse existing chassis numbers into inputs array
+    // Parse existing current chassis numbers into inputs array (not including sold/previous)
     const chassis = item.chassisNo
       ? item.chassisNo.split(",").map((c) => c.trim()).filter((c) => c)
       : [""];
@@ -728,6 +733,7 @@ export default function Inventory() {
               hsnNo: row.hsn_no || "",
               vehicleCount: row.vehicle_count || 0,
               chassisNo: row.chassis_no || "",
+              previousChassisNo: row.previous_chassis_no || "",
               motorNo: row.motor_no || "",
               batteryNo: row.battery_no || "",
               manufacturerInvNo: row.manufacturer_inv_no || "",
@@ -755,6 +761,7 @@ export default function Inventory() {
               hsnNo: item.hsnNo || "",
               vehicleCount,
               chassisNo: item.chassisNo || "",
+              previousChassisNo: item.previousChassisNo || "",
               motorNo: item.motorNo || "",
               batteryNo: item.batteryNo || "",
               manufacturerInvNo: item.manufacturerInvNo || "",
@@ -782,6 +789,7 @@ export default function Inventory() {
             hsnNo: item.hsnNo || "",
             vehicleCount,
             chassisNo: item.chassisNo || "",
+            previousChassisNo: item.previousChassisNo || "",
             motorNo: item.motorNo || "",
             batteryNo: item.batteryNo || "",
             manufacturerInvNo: item.manufacturerInvNo || "",
@@ -908,14 +916,48 @@ export default function Inventory() {
             </div>
 
             <div className="bg-card rounded-lg border border-border p-6">
-              <h2 className="text-xl font-semibold mb-4">Inventory Rows</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Inventory Rows</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setChassisFilter("all")}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      chassisFilter === "all"
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border hover:bg-muted"
+                    }`}
+                  >
+                    All Chassis
+                  </button>
+                  <button
+                    onClick={() => setChassisFilter("current")}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      chassisFilter === "current"
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border hover:bg-muted"
+                    }`}
+                  >
+                    Current (Unsold)
+                  </button>
+                  <button
+                    onClick={() => setChassisFilter("previous")}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      chassisFilter === "previous"
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border hover:bg-muted"
+                    }`}
+                  >
+                    Previous (Sold)
+                  </button>
+                </div>
+              </div>
               {isLoading ? (
                 <p className="text-muted-foreground">Loading inventory...</p>
               ) : items.length === 0 ? (
                 <p className="text-muted-foreground">No inventory rows yet.</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1400px] text-sm">
+                  <table className="w-full min-w-[1600px] text-sm">
                     <thead>
                       <tr className="border-b border-border">
                         <th className="px-3 py-2 text-left">Sl.No</th>
@@ -924,7 +966,12 @@ export default function Inventory() {
                         <th className="px-3 py-2 text-left">Vehicle Model</th>
                         <th className="px-3 py-2 text-left">HSN No</th>
                         <th className="px-3 py-2 text-left">Vehicle Count</th>
-                        <th className="px-3 py-2 text-left">Chassis No</th>
+                        {chassisFilter !== "previous" && (
+                          <th className="px-3 py-2 text-left">Current Chassis (Unsold)</th>
+                        )}
+                        {chassisFilter !== "current" && (
+                          <th className="px-3 py-2 text-left">Previous Chassis (Sold)</th>
+                        )}
                         <th className="px-3 py-2 text-left">Motor No</th>
                         <th className="px-3 py-2 text-left">Battery No</th>
                         <th className="px-3 py-2 text-left">Manufact. Inv No</th>
@@ -944,14 +991,25 @@ export default function Inventory() {
                           <td className="px-3 py-2">{item.vehicleModel || "-"}</td>
                           <td className="px-3 py-2">{item.hsnNo || "-"}</td>
                           <td className="px-3 py-2">{item.vehicleCount}</td>
-                          <td className="px-3 py-2">{item.chassisNo || "-"}</td>
+                          {chassisFilter !== "previous" && (
+                            <td className="px-3 py-2 bg-blue-50 dark:bg-blue-950/20">
+                              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">CURRENT:</span>
+                              <div className="text-sm">{item.chassisNo || "-"}</div>
+                            </td>
+                          )}
+                          {chassisFilter !== "current" && (
+                            <td className="px-3 py-2 bg-gray-50 dark:bg-gray-950/20">
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">SOLD:</span>
+                              <div className="text-sm">{item.previousChassisNo || "-"}</div>
+                            </td>
+                          )}
                           <td className="px-3 py-2">{item.motorNo || "-"}</td>
                           <td className="px-3 py-2">{item.batteryNo || "-"}</td>
                           <td className="px-3 py-2">{item.manufacturerInvNo || "-"}</td>
                           <td className="px-3 py-2">{item.batteryModel || "-"}</td>
                           <td className="px-3 py-2">{item.batteryCount}</td>
-                          <td className="px-3 py-2">{item.salesCount}</td>
-                          <td className="px-3 py-2 font-semibold">{item.closingStock}</td>
+                          <td className="px-3 py-2 font-semibold">{item.salesCount}</td>
+                          <td className="px-3 py-2 font-semibold text-green-600 dark:text-green-400">{item.closingStock}</td>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-3">
                               <button
