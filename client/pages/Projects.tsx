@@ -81,6 +81,28 @@ export default function Projects() {
   useEffect(() => {
     loadProjects();
     loadEstimations();
+
+    // Subscribe to real-time changes in projects
+    if (supabase) {
+      const projectsSubscription = supabase
+        .channel('projects-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
+          loadProjects();
+        })
+        .subscribe();
+
+      const estimationsSubscription = supabase
+        .channel('estimations-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'estimations' }, () => {
+          loadEstimations();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(projectsSubscription);
+        supabase.removeChannel(estimationsSubscription);
+      };
+    }
   }, []);
 
   const loadProjects = async () => {
