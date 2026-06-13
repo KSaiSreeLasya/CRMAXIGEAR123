@@ -113,44 +113,35 @@ export default function Projects() {
         try {
           const { data, error } = await supabase
             .from('projects')
-            .select('*')
+            .select('*', { count: 'estimated' })
             .order('created_at', { ascending: false });
 
-          if (error) throw error;
+          if (error) {
+            console.error('Supabase select error:', error);
+            throw error;
+          }
 
-          const formattedProjects = await Promise.all(
-            data?.map(async (project: any) => {
-              let splitPayments: SplitPayment[] = [];
-              try {
-                const payments = await getSplitPaymentsByReference("project", project.id);
-                splitPayments = payments;
-              } catch (err) {
-                console.warn(`Could not load split payments for project ${project.id}:`, err);
-              }
-
-              return {
-                id: project.id,
-                modelNo: project.model_no || "",
-                customerName: project.customer_name,
-                contactNo: project.contact_no,
-                location: project.location,
-                productDescription: project.product_description,
-                hsnNo: project.hsn_no,
-                chassisNo: project.chassis_no,
-                motorNo: project.motor_no || "",
-                batteryNo: project.battery_no || "",
-                batteryWarranty: project.battery_warranty || "",
-                batteryCapacity: project.battery_capacity || "",
-                vehicleWarranty: project.vehicle_warranty || "",
-                invoiceDate: project.invoice_date || "",
-                amount: project.amount,
-                modeOfPayment: project.mode_of_payment || "Cash",
-                leadSource: project.lead_source || "",
-                splitPayments,
-                createdAt: new Date(project.created_at).toLocaleDateString(),
-              };
-            }) || []
-          );
+          const formattedProjects = data?.map((project: any) => ({
+            id: project.id,
+            modelNo: project.model_no || "",
+            customerName: project.customer_name,
+            contactNo: project.contact_no,
+            location: project.location,
+            productDescription: project.product_description,
+            hsnNo: project.hsn_no,
+            chassisNo: project.chassis_no,
+            motorNo: project.motor_no || "",
+            batteryNo: project.battery_no || "",
+            batteryWarranty: project.battery_warranty || "",
+            batteryCapacity: project.battery_capacity || "",
+            vehicleWarranty: project.vehicle_warranty || "",
+            invoiceDate: project.invoice_date || "",
+            amount: project.amount,
+            modeOfPayment: project.mode_of_payment || "Cash",
+            leadSource: project.lead_source || "",
+            gstNo: project.gst_no || "",
+            createdAt: new Date(project.created_at).toLocaleDateString(),
+          })) || [];
 
           setProjects(formattedProjects);
           return;
@@ -190,9 +181,12 @@ export default function Projects() {
         try {
           const { data, error } = await supabase
             .from("estimations")
-            .select("*")
+            .select("*", { count: 'estimated' })
             .order("created_at", { ascending: false });
-          if (error) throw error;
+          if (error) {
+            console.error('Supabase estimations select error:', error);
+            throw error;
+          }
           const rows: EstimationRecord[] =
             data?.map((row: any) => ({
               id: row.id,
@@ -284,26 +278,28 @@ export default function Projects() {
         if (supabase) {
           try {
             const { data: userData } = await supabase.auth.getUser();
-            if (!userData.user?.id) throw new Error("Not authenticated");
 
             const { data, error } = await supabase
               .from("estimations")
               .insert([
                 {
-                  user_id: userData.user.id,
+                  user_id: userData.user?.id || null,
                   estimation_slip_no: payload.estimationSlipNo,
                   customer_name: payload.customerName,
                   contact_no: payload.contactNo,
                   address: payload.address,
-                  estimation_date: payload.estimationDate,
+                  estimation_date: payload.estimationDate || null,
                   model: payload.model,
                   amount: payload.amount,
                   mode_of_payment: payload.modeOfPayment,
                   lead_source: payload.leadSource,
                 },
               ])
-              .select();
-            if (error) throw error;
+              .select('*');
+            if (error) {
+              console.error('Supabase estimation insert error:', error);
+              throw error;
+            }
             created = {
               id: data[0].id,
               ...payload,
@@ -437,14 +433,14 @@ export default function Projects() {
         try {
           const { data: userData } = await supabase.auth.getUser();
           if (!userData.user?.id) {
-            throw new Error('User not authenticated');
+            console.warn('User not authenticated, proceeding without user_id');
           }
 
           const { data, error } = await supabase
             .from('projects')
             .insert([
               {
-                user_id: userData.user.id,
+                user_id: userData.user?.id || null,
                 model_no: newProject.modelNo || null,
                 customer_name: newProject.customerName,
                 contact_no: newProject.contactNo,
@@ -452,21 +448,25 @@ export default function Projects() {
                 product_description: newProject.productDescription,
                 hsn_no: newProject.hsnNo,
                 chassis_no: newProject.chassisNo,
-                motor_no: newProject.motorNo,
-                battery_no: newProject.batteryNo,
+                motor_no: newProject.motorNo || null,
+                battery_no: newProject.batteryNo || null,
                 battery_warranty: newProject.batteryWarranty || null,
                 battery_capacity: newProject.batteryCapacity || null,
                 vehicle_warranty: newProject.vehicleWarranty || null,
-                invoice_date: newProject.invoiceDate,
+                invoice_date: newProject.invoiceDate || null,
                 amount: newProject.amount,
                 mode_of_payment: newProject.modeOfPayment,
                 lead_source: newProject.leadSource || null,
+                gst_no: newProject.gstNo || null,
                 show_split_payment_details: newProject.showSplitPaymentDetails ?? false,
               }
             ])
-            .select();
+            .select('*');
 
-          if (error) throw error;
+          if (error) {
+            console.error('Supabase insert error:', error);
+            throw error;
+          }
 
           const dbProject: Project = {
             id: data[0].id,
@@ -486,6 +486,7 @@ export default function Projects() {
             amount: data[0].amount,
             modeOfPayment: data[0].mode_of_payment || "Cash",
             leadSource: data[0].lead_source || "",
+            gstNo: data[0].gst_no || "",
             splitPayments: splitPayments,
             showSplitPaymentDetails: data[0].show_split_payment_details ?? false,
             createdAt: new Date(data[0].created_at).toLocaleDateString(),
@@ -556,15 +557,16 @@ export default function Projects() {
               product_description: updatedData.productDescription,
               hsn_no: updatedData.hsnNo,
               chassis_no: updatedData.chassisNo,
-              motor_no: updatedData.motorNo,
-              battery_no: updatedData.batteryNo,
+              motor_no: updatedData.motorNo || null,
+              battery_no: updatedData.batteryNo || null,
               battery_warranty: updatedData.batteryWarranty || null,
               battery_capacity: updatedData.batteryCapacity || null,
               vehicle_warranty: updatedData.vehicleWarranty || null,
-              invoice_date: updatedData.invoiceDate,
+              invoice_date: updatedData.invoiceDate || null,
               amount: updatedData.amount,
               mode_of_payment: updatedData.modeOfPayment,
               lead_source: updatedData.leadSource || null,
+              gst_no: updatedData.gstNo || null,
               show_split_payment_details: updatedData.showSplitPaymentDetails ?? false,
             })
             .eq('id', id);
@@ -665,11 +667,7 @@ export default function Projects() {
   const handleImportProjects = async (importedItems: Record<string, any>[]) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId && supabase) {
-        throw new Error("User not authenticated");
-      }
+      const userId = userData.user?.id || null;
 
       const newProjects: Project[] = [];
       const projectsToInsert = importedItems.map((item) => ({
@@ -764,11 +762,7 @@ export default function Projects() {
   const handleImportEstimations = async (importedItems: Record<string, any>[]) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId && supabase) {
-        throw new Error("User not authenticated");
-      }
+      const userId = userData.user?.id || null;
 
       const newEstimations: EstimationRecord[] = [];
       const estimationsToInsert = importedItems.map((item) => ({

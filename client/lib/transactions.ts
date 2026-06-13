@@ -26,10 +26,7 @@ export async function createTransaction(
 
   try {
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user?.id) {
-      console.error("User not authenticated for transaction creation");
-      return null;
-    }
+    const userId = userData.user?.id || null;
 
     // Filter out zero-amount payments before saving
     const validPayments = splitPayments.filter((p) => p.amount > 0);
@@ -46,7 +43,7 @@ export async function createTransaction(
     const { data: transaction, error: txError } = await supabase
       .from("transactions")
       .insert({
-        user_id: userData.user.id,
+        user_id: userId,
         reference_type: referenceType,
         reference_id: referenceId,
         total_amount: totalAmount,
@@ -117,13 +114,14 @@ export async function getTransactionByReference(
       )
       .eq("reference_type", referenceType)
       .eq("reference_id", referenceId)
-      .single();
+      .limit(1);
 
-    if (error && error.code !== "PGRST116") {
-      console.error("Failed to get transaction:", error);
+    if (error) {
+      console.warn("Failed to get transaction:", error);
+      return null;
     }
 
-    return data || null;
+    return (data && data.length > 0) ? data[0] : null;
   } catch (error) {
     console.error("Error fetching transaction:", error);
     return null;
@@ -227,24 +225,25 @@ export async function getSplitPaymentsByReference(
   if (!supabase) return [];
 
   try {
-    // First, get the transaction ID
-    const { data: transaction, error: txError } = await supabase
+    // First, get the transaction ID without using .single() to avoid 406 errors
+    const { data: transactions, error: txError } = await supabase
       .from("transactions")
       .select("id")
       .eq("reference_type", referenceType)
       .eq("reference_id", referenceId)
-      .single();
+      .limit(1);
 
-    if (txError && txError.code !== "PGRST116") {
+    if (txError) {
       console.warn(`Transaction query error for ${referenceType}:${referenceId}:`, txError);
       return [];
     }
 
-    if (!transaction) {
+    if (!transactions || transactions.length === 0) {
       console.debug(`No transaction found for ${referenceType}:${referenceId}`);
       return [];
     }
 
+    const transaction = transactions[0];
     console.log(`Found transaction ${transaction.id} for ${referenceType}:${referenceId}`);
 
     // Then fetch split payments for this transaction
