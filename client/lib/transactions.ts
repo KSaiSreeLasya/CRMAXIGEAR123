@@ -26,10 +26,7 @@ export async function createTransaction(
 
   try {
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user?.id) {
-      console.error("User not authenticated for transaction creation");
-      return null;
-    }
+    const userId = userData.user?.id || null;
 
     // Filter out zero-amount payments before saving
     const validPayments = splitPayments.filter((p) => p.amount > 0);
@@ -46,7 +43,7 @@ export async function createTransaction(
     const { data: transaction, error: txError } = await supabase
       .from("transactions")
       .insert({
-        user_id: userData.user.id,
+        user_id: userId,
         reference_type: referenceType,
         reference_id: referenceId,
         total_amount: totalAmount,
