@@ -83,26 +83,28 @@ export const handleCreateAdminEmployee: RequestHandler = async (req, res) => {
           createdAt: employee.created_at,
         },
       });
-    } else {
-      const employee = data?.[0];
-      if (!employee) {
-        res.status(500).json({
-          error: "Employee was not created",
-        });
-        return;
-      }
-
-      res.json({
-        success: true,
-        employee: {
-          id: employee.id,
-          fullName: employee.full_name,
-          email: employee.email,
-          role: employee.role || "Admin",
-          createdAt: employee.created_at,
-        },
-      });
+      return;
     }
+
+    const employee = data?.[0];
+    if (!employee) {
+      res.status(500).json({
+        error: "Employee was not created",
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      employee: {
+        id: employee.id,
+        fullName: employee.full_name,
+        email: employee.email,
+        role: employee.role || "Admin",
+        createdAt: employee.created_at,
+      },
+    });
+    return;
   } catch (err: any) {
     console.error("Admin setup error:", err);
     res.status(500).json({
