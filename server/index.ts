@@ -35,7 +35,7 @@ export function createServer() {
 
   // SPA fallback: serve index.html for all non-API routes
   // This allows React Router to handle client-side routing
-  app.get(/.*/, (_req, res) => {
+  app.get(/^(?!\/api\/)/, (_req, res) => {
     res.sendFile(path.join(spaDir, "index.html"));
   });
 

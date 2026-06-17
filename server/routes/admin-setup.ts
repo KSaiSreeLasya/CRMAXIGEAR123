@@ -101,7 +101,7 @@ export const handleCreateAdminEmployee: RequestHandler = async (req, res) => {
     });
   } catch (err: any) {
     console.error("Admin setup error:", err);
-    res.status(500).json({
+    return res.status(500).json({
       error: err.message || "An error occurred",
     });
   }
