@@ -229,13 +229,89 @@ export default function DealerInvoice() {
 
     setIsSaving(true);
     try {
-      const { productTotal: _productTotal, taxableTotal: _taxableTotal, gstAmount, total } = calculateInvoiceTotal(
+      const { productTotal, taxableTotal: _taxableTotal, gstAmount, total } = calculateInvoiceTotal(
         form.products,
         form.labourCharges
       );
 
+      const invoiceId = editingId || `dealer_inv_${Date.now()}`;
+      const createdAtTime = editingId ? invoices.find(i => i.id === editingId)?.createdAt || new Date().toISOString() : new Date().toISOString();
+
+      const invoiceRecord = {
+        id: invoiceId,
+        invoice_number: form.dealerInvoiceNo,
+        invoice_date: form.invoiceDate,
+        due_date: form.dueDate || null,
+        dealer_id: null,
+        dealer_name: form.dealerName,
+        contact_no: form.contactNo,
+        location: form.location,
+        purchase_order_no: form.poNumber || null,
+        sent_to: form.sentTo || null,
+        ship_to: form.shipTo || null,
+        mode_of_payment: form.modeOfPayment,
+        lead_source: form.leadSource || null,
+        labour_charges: form.labourCharges || 0,
+        subtotal: productTotal,
+        gst_enabled: form.gstEnabled,
+        total_gst_amount: gstAmount,
+        total_amount: total,
+        payment_status: "pending",
+        created_at: createdAtTime,
+        updated_at: new Date().toISOString(),
+        is_deleted: false,
+      };
+
+      if (supabase && !isLoading) {
+        try {
+          if (editingId) {
+            await supabase
+              .from("dealer_invoices")
+              .update(invoiceRecord)
+              .eq("id", invoiceId);
+
+            // Delete old items
+            await supabase
+              .from("dealers_invoice_items")
+              .delete()
+              .eq("invoice_id", invoiceId);
+          } else {
+            await supabase
+              .from("dealer_invoices")
+              .insert([invoiceRecord]);
+          }
+
+          // Insert invoice items
+          const itemsToInsert = form.products.map((product) => ({
+            id: `${invoiceId}_${product.id}`,
+            invoice_id: invoiceId,
+            product_name: product.product,
+            product_description: product.productDescription,
+            quantity: product.unit,
+            unit_price: product.amount,
+            line_total: product.amount * product.unit,
+            gst_rate: product.gstRate || 18,
+            gst_amount: Math.round((product.amount * product.unit * (product.gstRate || 18)) / 100),
+            line_amount_with_gst: product.amount * product.unit + Math.round((product.amount * product.unit * (product.gstRate || 18)) / 100),
+            created_at: createdAtTime,
+            updated_at: new Date().toISOString(),
+          }));
+
+          if (itemsToInsert.length > 0) {
+            await supabase
+              .from("dealers_invoice_items")
+              .insert(itemsToInsert);
+          }
+
+          alert("Invoice saved to Supabase successfully!");
+        } catch (error) {
+          console.warn("Supabase save failed, using localStorage:", error);
+        }
+      }
+
+      // Always update localStorage
       const record: DealerInvoiceRecord = {
-        id: editingId || `dealer_inv_${Date.now()}`,
+        id: invoiceId,
         dealerInvoiceNo: form.dealerInvoiceNo,
         dealerName: form.dealerName,
         contactNo: form.contactNo,
@@ -252,27 +328,9 @@ export default function DealerInvoice() {
         gstAmount,
         modeOfPayment: form.modeOfPayment,
         leadSource: form.leadSource,
-        createdAt: editingId ? invoices.find(i => i.id === editingId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
+        createdAt: createdAtTime,
       };
 
-      if (supabase && !isLoading) {
-        try {
-          if (editingId) {
-            await supabase
-              .from("dealer_invoices")
-              .update(record)
-              .eq("id", editingId);
-          } else {
-            await supabase
-              .from("dealer_invoices")
-              .insert([record]);
-          }
-        } catch (error) {
-          console.warn("Supabase save failed, using localStorage");
-        }
-      }
-
-      // Always update localStorage
       const current = localStorage.getItem("crm_dealer_invoices");
       const invoicesList: DealerInvoiceRecord[] = current ? JSON.parse(current) : [];
 
@@ -348,14 +406,25 @@ export default function DealerInvoice() {
 
     try {
       const element = document.getElementById(`invoice-preview-${id}`);
-      if (!element) return;
+      if (!element) {
+        alert("Invoice preview not found. Please try again.");
+        return;
+      }
 
       const html2pdf = (await import("html2pdf.js")).default;
-      const pdf = html2pdf();
-      pdf.from(element).save(`${invoice.dealerInvoiceNo}.pdf`);
+      const options = {
+        margin: 10,
+        filename: `${invoice.dealerInvoiceNo}.pdf`,
+        image: { type: "png", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
+      };
+
+      html2pdf().set(options).from(element).save();
+      alert("PDF downloaded successfully!");
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      alert("Unable to download PDF");
+      alert("Unable to download PDF. Please check browser console.");
     }
   };
 
