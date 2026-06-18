@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { Briefcase, CalendarCheck2, Boxes, ShieldCheck, Wrench, Users } from "lucide-react";
+import { Briefcase, CalendarCheck2, Boxes, ShieldCheck, Wrench, Users, Receipt } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
@@ -95,6 +95,23 @@ export default function Dashboard() {
                   <h2 className="text-xl font-semibold">DEALERS</h2>
                   <p className="text-sm text-muted-foreground">
                     Manage dealers and their products.
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              to="/dealer-invoice"
+              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-md bg-cyan-100 p-3 text-cyan-700">
+                  <Receipt className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">DEALER INVOICE</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Create and manage dealer product invoices.
                   </p>
                 </div>
               </div>
