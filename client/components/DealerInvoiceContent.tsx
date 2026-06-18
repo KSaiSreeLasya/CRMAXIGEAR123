@@ -73,10 +73,22 @@ export default function DealerInvoiceContent({
 
   // Calculate GST per product based on their individual rates
   let totalProductGst = 0;
+  const gstRateBreakdown: { rate: number; amount: number }[] = [];
+
   products.forEach((p) => {
     const productLineTotal = p.amount * p.unit;
-    const gstRate = (p.gstRate || 18) / 100;
-    totalProductGst += roundCurrency(productLineTotal * gstRate);
+    const rate = p.gstRate || 18;
+    const gstRate = rate / 100;
+    const productGst = roundCurrency(productLineTotal * gstRate);
+    totalProductGst += productGst;
+
+    // Add to breakdown
+    const existingBreakdown = gstRateBreakdown.find(b => b.rate === rate);
+    if (existingBreakdown) {
+      existingBreakdown.amount += productGst;
+    } else {
+      gstRateBreakdown.push({ rate, amount: productGst });
+    }
   });
 
   // Add labour GST (18% default)
@@ -84,7 +96,14 @@ export default function DealerInvoiceContent({
   const gstAmount = gstEnabled ? totalProductGst + labourGst : 0;
   const totalAmount = gstEnabled ? roundCurrency(subtotalWithLabour + gstAmount) : subtotalWithLabour;
   const igstAmount = gstEnabled && gstType === "igst" ? gstAmount : 0;
-  const cgstAmount = gstEnabled && gstType === "cgst-sgst" ? roundCurrency(gstAmount / 2) : 0;
+
+  // Calculate CGST/SGST based on actual GST rates (half of each rate for CGST/SGST)
+  const cgstAmount = gstEnabled && gstType === "cgst-sgst"
+    ? roundCurrency(
+        gstRateBreakdown.reduce((sum, b) => sum + (b.amount / 2), 0) +
+        (labourCharges > 0 ? (labourGst / 2) : 0)
+      )
+    : 0;
   const sgstAmount = gstEnabled && gstType === "cgst-sgst" ? roundCurrency(gstAmount - cgstAmount) : 0;
 
   const containerClass = forPrint
@@ -268,18 +287,48 @@ export default function DealerInvoiceContent({
         {gstEnabled && (
           <>
             {gstType === "igst" ? (
-              <div className="flex justify-between text-sm">
-                <span className="font-medium text-gray-700">IGST (18%):</span>
-                <span className="font-semibold text-gray-900">₹{igstAmount.toFixed(2)}</span>
+              <div className="space-y-1">
+                {gstRateBreakdown.map((breakdown) => (
+                  <div key={breakdown.rate} className="flex justify-between text-sm">
+                    <span className="font-medium text-gray-700">IGST ({breakdown.rate}%):</span>
+                    <span className="font-semibold text-gray-900">₹{breakdown.amount.toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
             ) : (
               <>
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium text-gray-700">CGST (9%):</span>
+                <div className="space-y-1">
+                  {gstRateBreakdown.map((breakdown) => (
+                    <div key={breakdown.rate}>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>CGST ({(breakdown.rate / 2).toFixed(1)}%):</span>
+                        <span>₹{(breakdown.amount / 2).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>SGST ({(breakdown.rate / 2).toFixed(1)}%):</span>
+                        <span>₹{(breakdown.amount / 2).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {labourCharges > 0 && labourGst > 0 && (
+                    <>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>CGST (9%) [Labour]:</span>
+                        <span>₹{(labourGst / 2).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>SGST (9%) [Labour]:</span>
+                        <span>₹{(labourGst / 2).toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="border-t border-gray-300 pt-2 flex justify-between text-sm">
+                  <span className="font-medium text-gray-700">Total CGST:</span>
                   <span className="font-semibold text-gray-900">₹{cgstAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium text-gray-700">SGST (9%):</span>
+                  <span className="font-medium text-gray-700">Total SGST:</span>
                   <span className="font-semibold text-gray-900">₹{sgstAmount.toFixed(2)}</span>
                 </div>
               </>
