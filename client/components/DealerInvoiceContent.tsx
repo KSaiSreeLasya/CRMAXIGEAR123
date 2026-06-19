@@ -117,7 +117,8 @@ export default function DealerInvoiceContent({
           <img
             src="https://cdn.builder.io/api/v1/image/assets%2F59bf3e928fc9473a97d5e87470c824bb%2F8b737424d5b445559a46780e8d2b4449?format=webp&width=800&height=1200"
             alt="AXIGEAR Logo"
-            className="w-16 h-16 object-contain flex-shrink-0"
+            className="w-20 h-20 object-contain flex-shrink-0 print:w-20 print:h-20"
+            style={{ pageBreakInside: "avoid" }}
           />
           <h1 className="text-lg font-bold leading-tight">{COMPANY_INFO.name}</h1>
         </div>
@@ -170,46 +171,49 @@ export default function DealerInvoiceContent({
   );
 
   const billToBlock = (
-    <div className="grid grid-cols-2 gap-8 mb-6 pb-6 border-b-2 border-gray-400">
-      <div>
-        <p className="text-xs font-bold text-gray-700 mb-2">BILL TO:</p>
-        <div className="space-y-1 text-sm">
-          <p className="font-bold text-gray-900">{invoice.dealerName}</p>
-          <p className="text-gray-700">{invoice.contactNo}</p>
-          <p className="text-gray-700">{invoice.location}</p>
+    <div className="mb-6 pb-6 border-b-2 border-gray-400">
+      <div className="grid grid-cols-4 gap-4">
+        <div>
+          <p className="text-xs font-bold text-gray-700 mb-2">BILL TO:</p>
+          <div className="space-y-1 text-xs">
+            <p className="font-bold text-gray-900">{invoice.dealerName}</p>
+            <p className="text-gray-700">{invoice.contactNo}</p>
+            <p className="text-gray-700">{invoice.location}</p>
+          </div>
         </div>
-        {(invoice.sentTo || invoice.shipTo) && (
-          <div className="mt-4 pt-4 border-t border-gray-300">
-            {invoice.sentTo && (
-              <div className="text-xs space-y-1">
-                <p className="font-bold text-gray-700">Sent To:</p>
+        <div>
+          {invoice.sentTo && (
+            <div>
+              <p className="text-xs font-bold text-gray-700 mb-2">SENT TO:</p>
+              <div className="space-y-1 text-xs">
                 <p className="text-gray-700">{invoice.sentTo}</p>
               </div>
-            )}
-            {invoice.shipTo && (
-              <div className="text-xs space-y-1 mt-2">
-                <p className="font-bold text-gray-700">Ship To:</p>
+            </div>
+          )}
+        </div>
+        <div>
+          {invoice.shipTo && (
+            <div>
+              <p className="text-xs font-bold text-gray-700 mb-2">SHIP TO:</p>
+              <div className="space-y-1 text-xs">
                 <p className="text-gray-700">{invoice.shipTo}</p>
               </div>
-            )}
+            </div>
+          )}
+        </div>
+        <div>
+          <p className="text-xs font-bold text-gray-700 mb-2">BANK DETAILS:</p>
+          <div className="space-y-0.5 text-xs text-gray-700">
+            <p>
+              <span className="font-bold">Bank:</span> {COMPANY_INFO.bank.name}
+            </p>
+            <p>
+              <span className="font-bold">A/C:</span> {COMPANY_INFO.bank.accountNo}
+            </p>
+            <p>
+              <span className="font-bold">IFSC:</span> {COMPANY_INFO.bank.ifscCode}
+            </p>
           </div>
-        )}
-      </div>
-      <div>
-        <p className="text-xs font-bold text-gray-700 mb-2">BANK DETAILS:</p>
-        <div className="space-y-0.5 text-xs text-gray-700">
-          <p>
-            <span className="font-bold">Bank Name:</span> {COMPANY_INFO.bank.name}
-          </p>
-          <p>
-            <span className="font-bold">A/C No:</span> {COMPANY_INFO.bank.accountNo}
-          </p>
-          <p>
-            <span className="font-bold">IFSC:</span> {COMPANY_INFO.bank.ifscCode}
-          </p>
-          <p>
-            <span className="font-bold">Location:</span> {COMPANY_INFO.bank.location}
-          </p>
         </div>
       </div>
     </div>
