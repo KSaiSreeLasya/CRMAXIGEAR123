@@ -33,6 +33,7 @@ interface DealerInvoiceContentProps {
   invoice: DealerInvoiceRecord;
   gstType: "igst" | "cgst-sgst";
   forPrint?: boolean;
+  logoDataUri?: string;
 }
 
 const COMPANY_INFO = {
@@ -56,6 +57,7 @@ export default function DealerInvoiceContent({
   invoice,
   gstType,
   forPrint = false,
+  logoDataUri,
 }: DealerInvoiceContentProps) {
   const gstEnabled = invoice.gstEnabled !== false;
   const labourCharges = invoice.labourCharges || 0;
@@ -115,7 +117,7 @@ export default function DealerInvoiceContent({
       <div>
         <div className="flex items-center gap-3 mb-3">
           <img
-            src="https://cdn.builder.io/api/v1/image/assets%2F59bf3e928fc9473a97d5e87470c824bb%2F8b737424d5b445559a46780e8d2b4449?format=webp&width=800&height=1200"
+            src={logoDataUri || "https://cdn.builder.io/api/v1/image/assets%2F59bf3e928fc9473a97d5e87470c824bb%2F8b737424d5b445559a46780e8d2b4449?format=webp&width=800&height=1200"}
             alt="AXIGEAR Logo"
             className="w-16 h-16 object-contain flex-shrink-0"
           />

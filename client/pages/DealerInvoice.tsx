@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { getEmployeeSession } from "@/lib/auth";
+import { imageToDataUri } from "@/lib/utils";
 import DealerInvoiceContent from "@/components/DealerInvoiceContent";
 import { ImportExport } from "@/components/ImportExport";
 import { SplitPaymentForm, type SplitPayment } from "@/components/SplitPaymentForm";
@@ -135,6 +136,7 @@ export default function DealerInvoice() {
   const [isSaving, setIsSaving] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [gstType, setGstType] = useState<"igst" | "cgst-sgst">("cgst-sgst");
+  const [logoDataUri, setLogoDataUri] = useState<string>("");
 
   useEffect(() => {
     void loadInvoices();
@@ -146,6 +148,15 @@ export default function DealerInvoice() {
       }));
     }
   }, [editingId]);
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      const logoUrl = "https://cdn.builder.io/api/v1/image/assets%2F59bf3e928fc9473a97d5e87470c824bb%2F8b737424d5b445559a46780e8d2b4449?format=webp&width=800&height=1200";
+      const dataUri = await imageToDataUri(logoUrl);
+      setLogoDataUri(dataUri);
+    };
+    void loadLogo();
+  }, []);
 
   const loadInvoices = async () => {
     setIsLoading(true);
@@ -973,6 +984,7 @@ export default function DealerInvoice() {
                       <DealerInvoiceContent
                         invoice={invoices.find((i) => i.id === previewId)!}
                         gstType={gstType}
+                        logoDataUri={logoDataUri}
                       />
                     </div>
                   )}
