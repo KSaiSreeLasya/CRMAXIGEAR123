@@ -9,8 +9,8 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     fs: {
-      allow: ["./client", "./shared", "index.html"],
-      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
+      allow: ["./client", "./shared", "index.html", ".env"],
+      deny: [".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
   },
   build: {

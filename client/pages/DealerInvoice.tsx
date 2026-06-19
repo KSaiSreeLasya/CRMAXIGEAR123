@@ -244,12 +244,12 @@ export default function DealerInvoice() {
         due_date: form.dueDate || null,
         dealer_id: null,
         dealer_name: form.dealerName,
-        contact_no: form.contactNo,
-        location: form.location,
+        contact_no: form.contactNo || null,
+        location: form.location || null,
         purchase_order_no: form.poNumber || null,
         sent_to: form.sentTo || null,
         ship_to: form.shipTo || null,
-        mode_of_payment: form.modeOfPayment,
+        mode_of_payment: form.modeOfPayment || null,
         lead_source: form.leadSource || null,
         labour_charges: form.labourCharges || 0,
         subtotal: productTotal,
@@ -269,38 +269,10 @@ export default function DealerInvoice() {
               .from("dealers_invoices")
               .update(invoiceRecord)
               .eq("id", invoiceId);
-
-            // Delete old items
-            await supabase
-              .from("dealers_invoice_items")
-              .delete()
-              .eq("invoice_id", invoiceId);
           } else {
             await supabase
               .from("dealers_invoices")
               .insert([invoiceRecord]);
-          }
-
-          // Insert invoice items
-          const itemsToInsert = form.products.map((product) => ({
-            id: `${invoiceId}_${product.id}`,
-            invoice_id: invoiceId,
-            product_name: product.product,
-            product_description: product.productDescription,
-            quantity: product.unit,
-            unit_price: product.amount,
-            line_total: product.amount * product.unit,
-            gst_rate: product.gstRate || 18,
-            gst_amount: Math.round((product.amount * product.unit * (product.gstRate || 18)) / 100),
-            line_amount_with_gst: product.amount * product.unit + Math.round((product.amount * product.unit * (product.gstRate || 18)) / 100),
-            created_at: createdAtTime,
-            updated_at: new Date().toISOString(),
-          }));
-
-          if (itemsToInsert.length > 0) {
-            await supabase
-              .from("dealers_invoice_items")
-              .insert(itemsToInsert);
           }
 
           alert("Invoice saved to Supabase successfully!");
