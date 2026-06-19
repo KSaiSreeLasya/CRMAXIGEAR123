@@ -118,23 +118,6 @@ export default function Dashboard() {
             </Link>
 
             <Link
-              to="/dealers-product-invoice"
-              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
-            >
-              <div className="flex items-center gap-4">
-                <div className="rounded-md bg-blue-100 p-3 text-blue-700">
-                  <Receipt className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold">DEALERS PRODUCT INVOICES</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Proforma invoices for dealer products.
-                  </p>
-                </div>
-              </div>
-            </Link>
-
-            <Link
               to="/admin-employees"
               className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
             >
