@@ -1,8 +1,45 @@
 import Layout from "@/components/Layout";
-import { Briefcase, CalendarCheck2, Boxes, ShieldCheck, Wrench, Users, Receipt, Truck } from "lucide-react";
+import { Briefcase, CalendarCheck2, Boxes, ShieldCheck, Wrench, Users, Receipt, Truck, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+
+interface Delivery {
+  id: string;
+  delivery_date: string;
+  status: string;
+}
 
 export default function Dashboard() {
+  const [upcomingDeliveryCount, setUpcomingDeliveryCount] = useState(0);
+
+  useEffect(() => {
+    checkUpcomingDeliveries();
+  }, []);
+
+  const checkUpcomingDeliveries = async () => {
+    try {
+      const { data } = await supabase
+        .from("deliveries")
+        .select("id, delivery_date, status")
+        .neq("status", "completed");
+
+      if (data) {
+        const now = new Date();
+        const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const upcoming = (data as Delivery[]).filter((delivery) => {
+          const deliveryDate = new Date(delivery.delivery_date);
+          return deliveryDate >= now && deliveryDate <= oneWeekFromNow;
+        });
+
+        setUpcomingDeliveryCount(upcoming.length);
+      }
+    } catch (error) {
+      console.error("Failed to fetch upcoming deliveries:", error);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12">
@@ -136,8 +173,14 @@ export default function Dashboard() {
 
             <Link
               to="/delivery"
-              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all"
+              className="rounded-lg border border-border bg-card p-6 text-left hover:border-primary hover:shadow-md transition-all relative"
             >
+              {upcomingDeliveryCount > 0 && (
+                <div className="absolute top-4 right-4 flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  <AlertCircle className="h-4 w-4" />
+                  {upcomingDeliveryCount} due soon
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <div className="rounded-md bg-pink-100 p-3 text-pink-700">
                   <Truck className="h-6 w-6" />
