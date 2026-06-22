@@ -273,7 +273,7 @@ export default function DealerInvoiceContent({
     <div className="grid grid-cols-3 gap-6 mb-6">
       <div></div>
       <div></div>
-      <div className="space-y-2 border-2 border-gray-300 p-4 bg-gray-50 rounded">
+      <div className="space-y-2 border-2 border-gray-300 p-4 bg-gray-50 rounded min-w-[300px]">
         <div className="flex justify-between text-sm">
           <span className="font-medium text-gray-700">Product Total:</span>
           <span className="font-semibold text-gray-900">₹{subtotal.toFixed(2)}</span>
@@ -285,9 +285,14 @@ export default function DealerInvoiceContent({
           </div>
         )}
         {gstEnabled && (
-          <div className="border-t border-gray-300 pt-2 flex justify-between font-bold text-base">
-            <span className="text-gray-900">TOTAL AMOUNT:</span>
-            <span className="text-green-700">₹{totalAmount.toFixed(2)}</span>
+          <div className="border-t border-gray-300 pt-2 flex justify-between items-center gap-3 font-bold text-base">
+            <span className="text-gray-900 whitespace-nowrap">
+              TOTAL AMOUNT:
+            </span>
+
+            <span className="text-green-700 whitespace-nowrap flex-shrink-0 min-w-[140px] text-right">
+              ₹{totalAmount.toFixed(2)}
+            </span>
           </div>
         )}
       </div>
