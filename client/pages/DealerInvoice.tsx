@@ -9,7 +9,7 @@ import DealerInvoiceContent from "@/components/DealerInvoiceContent";
 import { ImportExport } from "@/components/ImportExport";
 import { SplitPaymentForm, type SplitPayment } from "@/components/SplitPaymentForm";
 import { PaymentHistoryDisplay } from "@/components/PaymentHistoryDisplay";
-import { cn } from "@/lib/cn";
+import { cn } from "@/lib/utils";
 
 interface ProductRow {
   id?: string;
