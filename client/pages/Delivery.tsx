@@ -13,8 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Trash2, Edit2, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Delivery {
   id: string;
@@ -30,6 +31,7 @@ export default function Delivery() {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     project_name: "",
@@ -203,11 +205,22 @@ export default function Delivery() {
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Deliveries</h1>
-              <p className="text-muted-foreground">
-                Manage project deliverables and delivery dates
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="gap-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold">Deliveries</h1>
+                <p className="text-muted-foreground">
+                  Manage project deliverables and delivery dates
+                </p>
+              </div>
             </div>
             {!isAdding && (
               <Button onClick={() => setIsAdding(true)} className="gap-2">
