@@ -967,11 +967,14 @@ const loadSparesInvoices = async () => {
             </button>
           </div>
 
-          {/* Form Section */}
-          <div className="border rounded-lg p-6 bg-card">
-            <h2 className="text-xl font-semibold mb-6">
-              {editingId ? "Edit Invoice" : "Create New Invoice"}
-            </h2>
+          {/* PRODUCTS TAB */}
+          {activeTab === "products" && (
+            <>
+              {/* Form Section */}
+              <div className="border rounded-lg p-6 bg-card">
+                <h2 className="text-xl font-semibold mb-6">
+                  {editingId ? "Edit Invoice" : "Create New Invoice"}
+                </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
@@ -1361,22 +1364,22 @@ const loadSparesInvoices = async () => {
             </div>
           </div>
 
-          {/* Import/Export */}
-          <div className="flex gap-2">
-            <ImportExport
-              data={invoices}
-              onImport={handleImport}
-              dataType="service_invoices"
-              exportHeaders={["dealerInvoiceNo", "dealerName", "contactNo", "location", "invoiceDate", "total", "modeOfPayment"]}
-              filename="dealer-invoices"
-              title="Dealer Invoices"
-              showCsvExport={true}
-              showPdfExport={false}
-            />
-          </div>
+              {/* Import/Export */}
+              <div className="flex gap-2">
+                <ImportExport
+                  data={invoices}
+                  onImport={handleImport}
+                  dataType="service_invoices"
+                  exportHeaders={["dealerInvoiceNo", "dealerName", "contactNo", "location", "invoiceDate", "total", "modeOfPayment"]}
+                  filename="dealer-invoices"
+                  title="Dealer Invoices"
+                  showCsvExport={true}
+                  showPdfExport={false}
+                />
+              </div>
 
-          {/* Invoices List */}
-          <div className="border rounded-lg overflow-hidden">
+              {/* Invoices List */}
+              <div className="border rounded-lg overflow-hidden">
             <div className="bg-muted px-6 py-3 font-semibold">
               Saved Invoices ({invoices.length})
             </div>
@@ -1449,9 +1452,9 @@ const loadSparesInvoices = async () => {
             )}
           </div>
 
-          {/* Preview Modal */}
-          {previewId && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              {/* Preview Modal */}
+              {previewId && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto w-full">
                 <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center gap-4">
                   <h2 className="text-xl font-semibold">Invoice Preview</h2>
@@ -1486,6 +1489,519 @@ const loadSparesInvoices = async () => {
                 </div>
               </div>
             </div>
+          )}
+            </>
+          )}
+
+          {/* SPARES TAB */}
+          {activeTab === "spares" && (
+            <>
+              {/* Spares Form Section */}
+              <div className="border rounded-lg p-6 bg-card">
+                <h2 className="text-xl font-semibold mb-6">
+                  {editingSparesId ? "Edit Spares Invoice" : "Create New Spares Invoice"}
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Invoice Number
+                    </label>
+                    <input
+                      type="text"
+                      value={sparesForm.dealerInvoiceNo}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, dealerInvoiceNo: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="e.g., SPARE/2026-27/001"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Dealer Name
+                    </label>
+                    <input
+                      type="text"
+                      list="spares-dealer-list"
+                      value={sparesForm.dealerName}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, dealerName: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Select or enter dealer name"
+                    />
+                    <datalist id="spares-dealer-list">
+                      {dealers.map((dealer) => (
+                        <option key={dealer.id} value={dealer.name} />
+                      ))}
+                    </datalist>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Contact No
+                    </label>
+                    <input
+                      type="tel"
+                      value={sparesForm.contactNo}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, contactNo: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Contact number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={sparesForm.location}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, location: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Location"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Invoice Date
+                    </label>
+                    <input
+                      type="date"
+                      value={sparesForm.invoiceDate}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, invoiceDate: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={sparesForm.dueDate}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, dueDate: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      P.O.# (Purchase Order Number)
+                    </label>
+                    <input
+                      type="text"
+                      value={sparesForm.poNumber}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, poNumber: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="e.g., PO-12345"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Sent To
+                    </label>
+                    <input
+                      type="text"
+                      value={sparesForm.sentTo}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, sentTo: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Contact person name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Ship To
+                    </label>
+                    <input
+                      type="text"
+                      value={sparesForm.shipTo}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, shipTo: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Shipping address"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Mode of Payment
+                    </label>
+                    <select
+                      value={sparesForm.modeOfPayment}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, modeOfPayment: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                    >
+                      <option>Cash</option>
+                      <option>Cheque</option>
+                      <option>Bank Transfer</option>
+                      <option>Credit Card</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Lead Source
+                    </label>
+                    <input
+                      type="text"
+                      value={sparesForm.leadSource}
+                      onChange={(e) =>
+                        setSparesForm({ ...sparesForm, leadSource: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="Lead source"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Labour Charges
+                    </label>
+                    <input
+                      type="number"
+                      value={sparesForm.labourCharges}
+                      onChange={(e) =>
+                        setSparesForm({
+                          ...sparesForm,
+                          labourCharges: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                {/* Spares Products Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4">Spares Products</h3>
+                  <div className="mb-2 flex gap-2 items-center text-xs font-semibold text-gray-600 px-2">
+                    <div className="flex-1">Product</div>
+                    <div className="flex-1">Description</div>
+                    <div className="w-20 text-right">Unit</div>
+                    <div className="w-24 text-right">Amount</div>
+                    <div className="w-20 text-center">GST Rate</div>
+                    <div className="w-20 text-right">Total</div>
+                    <div className="w-20 text-right">GST Amt</div>
+                  </div>
+                  <div className="space-y-3">
+                    {sparesForm.products.map((product, idx) => (
+                      <div key={product.id} className="flex gap-2 items-end">
+                        <input
+                          type="text"
+                          placeholder="Spare name"
+                          value={product.product}
+                          onChange={(e) => {
+                            const updated = [...sparesForm.products];
+                            updated[idx].product = e.target.value;
+                            setSparesForm({ ...sparesForm, products: updated });
+                          }}
+                          className="flex-1 px-3 py-2 border rounded-md text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Description"
+                          value={product.productDescription}
+                          onChange={(e) => {
+                            const updated = [...sparesForm.products];
+                            updated[idx].productDescription = e.target.value;
+                            setSparesForm({ ...sparesForm, products: updated });
+                          }}
+                          className="flex-1 px-3 py-2 border rounded-md text-sm"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Unit"
+                          value={product.unit}
+                          onChange={(e) => {
+                            const updated = [...sparesForm.products];
+                            updated[idx].unit = parseFloat(e.target.value) || 0;
+                            setSparesForm({ ...sparesForm, products: updated });
+                          }}
+                          className="w-20 px-3 py-2 border rounded-md text-sm"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Amount"
+                          value={product.amount}
+                          onChange={(e) => {
+                            const updated = [...sparesForm.products];
+                            updated[idx].amount = parseFloat(e.target.value) || 0;
+                            setSparesForm({ ...sparesForm, products: updated });
+                          }}
+                          className="w-24 px-3 py-2 border rounded-md text-sm"
+                        />
+                        <select
+                          value={product.gstRate || 18}
+                          onChange={(e) => {
+                            const updated = [...sparesForm.products];
+                            updated[idx].gstRate = parseFloat(e.target.value);
+                            setSparesForm({ ...sparesForm, products: updated });
+                          }}
+                          className="w-20 px-3 py-2 border rounded-md text-sm"
+                          title="GST Rate"
+                        >
+                          <option value="5">GST 5%</option>
+                          <option value="18">GST 18%</option>
+                        </select>
+                        <span className="w-20 px-3 py-2 text-sm font-medium text-right">
+                          ₹{((product.amount * product.unit) + ((product.amount * product.unit * (product.gstRate || 18)) / 100)).toFixed(2)}
+                        </span>
+                        <span className="w-20 px-3 py-2 text-sm font-medium text-right text-blue-600">
+                          ₹{((product.amount * product.unit * (product.gstRate || 18)) / 100).toFixed(2)}
+                        </span>
+                        {sparesForm.products.length > 1 && (
+                          <Button
+                            onClick={() => {
+                              setSparesForm({
+                                ...sparesForm,
+                                products: sparesForm.products.filter((_, i) => i !== idx),
+                              });
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setSparesForm({
+                        ...sparesForm,
+                        products: [
+                          ...sparesForm.products,
+                          { ...DEFAULT_PRODUCT_ROW, id: `product_${Date.now()}` },
+                        ],
+                      });
+                    }}
+                    variant="outline"
+                    className="mt-3 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Spare
+                  </Button>
+                </div>
+
+                {/* Spares Summary */}
+                {sparesForm.products.length > 0 && (
+                  <div className="bg-muted p-4 rounded-md mb-6 overflow-x-auto">
+                    {(() => {
+                      const { productTotal, taxableTotal, gstAmount, total, gstBreakdown, labourGst } =
+                        calculateInvoiceTotal(sparesForm.products, sparesForm.labourCharges);
+                      return (
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Spares Total:</span>
+                            <span>₹{productTotal.toFixed(2)}</span>
+                          </div>
+                          {sparesForm.labourCharges > 0 && (
+                            <div className="flex justify-between">
+                              <span>Labour Charges:</span>
+                              <span>₹{sparesForm.labourCharges.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between border-t pt-2">
+                            <span>Taxable Value:</span>
+                            <span>₹{taxableTotal.toFixed(2)}</span>
+                          </div>
+                          {sparesForm.gstEnabled && (
+                            <>
+                              <div className="space-y-1 pl-4">
+                                {gstBreakdown?.map((breakdown, idx) => (
+                                  <div key={idx} className="flex justify-between text-xs">
+                                    <span>GST ({breakdown.rate}%):</span>
+                                    <span>₹{breakdown.amount.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                                {labourGst > 0 && (
+                                  <div className="flex justify-between text-xs">
+                                    <span>Labour GST (18%):</span>
+                                    <span>₹{labourGst.toFixed(2)}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex justify-between items-center font-semibold border-t pt-2">
+                                <span className="whitespace-nowrap">TOTAL AMOUNT:</span>
+                                <span
+                                  className="text-green-600 whitespace-nowrap flex-shrink-0"
+                                  style={{ whiteSpace: "nowrap" }}
+                                >
+                                  ₹{total.toFixed(2)}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Spares Action Buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => saveSparesInvoice()}
+                    className="flex-1"
+                    disabled={isSaving}
+                  >
+                    {isSaving
+                      ? "Saving..."
+                      : editingSparesId
+                        ? "Update Invoice"
+                        : "Create Invoice"}
+                  </Button>
+                  {editingSparesId && (
+                    <Button
+                      onClick={() => {
+                        setSparesForm(DEFAULT_FORM);
+                        setEditingSparesId(null);
+                      }}
+                      variant="outline"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Spares Invoices List */}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-muted px-6 py-3 font-semibold">
+                  Saved Spares Invoices ({sparesInvoices.length})
+                </div>
+                {sparesInvoices.length === 0 ? (
+                  <div className="px-6 py-12 text-center text-muted-foreground">
+                    No spares invoices yet. Create one above.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="border-t border-b bg-muted">
+                        <tr>
+                          <th className="text-left px-6 py-3 font-medium">
+                            Invoice #
+                          </th>
+                          <th className="text-left px-6 py-3 font-medium">
+                            Dealer
+                          </th>
+                          <th className="text-left px-6 py-3 font-medium">Date</th>
+                          <th className="text-left px-6 py-3 font-medium">Amount</th>
+                          <th className="text-left px-6 py-3 font-medium">
+                            Payment
+                          </th>
+                          <th className="text-left px-6 py-3 font-medium">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sparesInvoices.map((invoice) => (
+                          <tr key={invoice.id} className="border-t hover:bg-muted">
+                            <td className="px-6 py-3">
+                              {invoice.sparesInvoiceNo}
+                            </td>
+                            <td className="px-6 py-3">{invoice.dealerName}</td>
+                            <td className="px-6 py-3">{invoice.invoiceDate}</td>
+                            <td className="px-6 py-3 font-semibold">
+                              ₹{invoice.total.toFixed(2)}
+                            </td>
+                            <td className="px-6 py-3">{invoice.modeOfPayment}</td>
+                            <td className="px-6 py-3 flex gap-2">
+                              <Button
+                                onClick={() => setSparesPreviewId(invoice.id)}
+                                variant="outline"
+                                size="sm"
+                              >
+                                Preview
+                              </Button>
+                              <Button
+                                onClick={() => editSparesInvoice(invoice.id)}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                onClick={() => deleteSparesInvoice(invoice.id)}
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Spares Preview Modal */}
+              {sparesPreviewId && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                  <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto w-full">
+                    <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center gap-4">
+                      <h2 className="text-xl font-semibold">Spares Invoice Preview</h2>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => downloadSparesInvoicePDF(sparesPreviewId)}
+                          variant="outline"
+                          size="sm"
+                          className="flex gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download PDF
+                        </Button>
+                        <Button
+                          onClick={() => setSparesPreviewId(null)}
+                          variant="ghost"
+                          size="sm"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      {sparesInvoices.find((i) => i.id === sparesPreviewId) && (
+                        <div id={`spares-invoice-preview-${sparesPreviewId}`}>
+                          <DealerInvoiceContent
+                            invoice={sparesInvoices.find((i) => i.id === sparesPreviewId)!}
+                            gstType={gstType}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
