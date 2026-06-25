@@ -46,9 +46,10 @@ export default function ProductInvoiceContent({
   gstType,
   forPrint = false,
 }: ProductInvoiceContentProps) {
-  const amount = product.amount || 0;
-  const gstAmount = roundCurrency(amount * 0.18);
-  const totalAmount = roundCurrency(amount + gstAmount);
+  const unitPrice = product.amount || 0;
+  const lineAmount = roundCurrency(unitPrice * product.no_of_vehicles);
+  const gstAmount = roundCurrency(lineAmount * 0.18);
+  const totalAmount = roundCurrency(lineAmount + gstAmount);
   const igstAmount = gstType === "igst" ? gstAmount : 0;
   const cgstAmount = gstType === "cgst-sgst" ? roundCurrency(gstAmount / 2) : 0;
   const sgstAmount = gstType === "cgst-sgst" ? roundCurrency(gstAmount - cgstAmount) : 0;
@@ -149,10 +150,10 @@ export default function ProductInvoiceContent({
                   {product.no_of_vehicles}
                 </td>
                 <td className="px-4 py-4 text-sm text-right text-gray-900 font-semibold">
-                  ₹{amount.toFixed(2)}
+                  ₹{unitPrice.toFixed(2)}
                 </td>
                 <td className="px-4 py-4 text-sm text-right text-gray-900 font-bold">
-                  ₹{roundCurrency(amount * product.no_of_vehicles).toFixed(2)}
+                  ₹{lineAmount.toFixed(2)}
                 </td>
               </tr>
             </tbody>
@@ -169,7 +170,7 @@ export default function ProductInvoiceContent({
           <div className="space-y-3 text-right">
             <div className="flex justify-between text-sm border-b border-gray-300 pb-2">
               <span className="text-gray-700 font-medium">SUBTOTAL</span>
-              <span className="font-semibold text-gray-900">₹{amount.toFixed(2)}</span>
+              <span className="font-semibold text-gray-900">₹{lineAmount.toFixed(2)}</span>
             </div>
 
             {gstType === "igst" ? (
