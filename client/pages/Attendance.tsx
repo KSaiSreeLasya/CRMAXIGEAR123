@@ -95,17 +95,29 @@ function matchesEmployee(record: AttendanceEntry, emp: Employee) {
   );
 }
 
-function computeSummary(rows: AttendanceEntry[]): Omit<PayrollRow, "grossSalary" | "netSalary"> {
+function isSunday(year: number, month: number, day: number): boolean {
+  const date = new Date(year, month - 1, day);
+  return date.getDay() === 0;
+}
+
+function computeSummary(rows: AttendanceEntry[], year: number, month: number): Omit<PayrollRow, "grossSalary" | "netSalary"> {
   let numPresents = 0;
   let numWeeklyOffs = 0;
   let numAbsents = 0;
   let numLeaves = 0;
+  let sundayBonusCount = 0;
 
   for (const r of rows) {
+    const dayMatch = r.attendanceDate.match(/\d+-\d+-(\d+)/);
+    const day = dayMatch ? parseInt(dayMatch[1], 10) : null;
+
     switch (r.status) {
       case "Present":
       case "Half Day":
         numPresents += 1;
+        if (day !== null && isSunday(year, month, day)) {
+          sundayBonusCount += 1;
+        }
         break;
       case "Absent":
         numAbsents += 1;
@@ -121,8 +133,9 @@ function computeSummary(rows: AttendanceEntry[]): Omit<PayrollRow, "grossSalary"
     }
   }
 
-  const paidDays = numPresents + numLeaves + numWeeklyOffs;
-  return { numPresents, numWeeklyOffs, numAbsents, numLeaves, paidDays };
+  const numPresentsWithSundayBonus = numPresents + sundayBonusCount;
+  const paidDays = numPresentsWithSundayBonus + numLeaves + numWeeklyOffs;
+  return { numPresents: numPresentsWithSundayBonus, numWeeklyOffs, numAbsents, numLeaves, paidDays };
 }
 
 function payrollStorageKey(yearMonth: string) {
@@ -351,8 +364,9 @@ export default function Attendance() {
     monthRecords: AttendanceEntry[],
     payrollYm: string,
   ) => {
+    const { year: pmYear, month: pmMonth } = parseYearMonth(payrollYm);
     const empRows = monthRecords.filter((r) => matchesEmployee(r, emp));
-    const computed = computeSummary(empRows);
+    const computed = computeSummary(empRows, pmYear, pmMonth);
 
     let gross: number | null = null;
     let net: number | null = null;
@@ -646,7 +660,7 @@ export default function Attendance() {
     if (raw !== "" && Number.isNaN(num)) return;
 
     const empRows = records.filter((r) => matchesEmployee(r, emp));
-    const computed = computeSummary(empRows);
+    const computed = computeSummary(empRows, viewYear, viewMonth);
     const prev = payrollMap[emp.id];
 
     const merged: PayrollRow = {
@@ -698,7 +712,7 @@ export default function Attendance() {
 
   const displaySummary = (emp: Employee) => {
     const empRows = records.filter((r) => matchesEmployee(r, emp));
-    const computed = computeSummary(empRows);
+    const computed = computeSummary(empRows, viewYear, viewMonth);
     const stored = payrollMap[emp.id];
     return {
       numPresents: stored?.numPresents ?? computed.numPresents,
