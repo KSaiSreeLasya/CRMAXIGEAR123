@@ -7,9 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DealersTab from "@/components/dealers/DealersTab";
 import ProductsTab from "@/components/dealers/ProductsTab";
 import {
-  fetchDealers,
-  addDealer as dbAddDealer,
-  deleteDealer as dbDeleteDealer,
+  fetchDMSDealers,
+  addDMSDealer,
+  deleteDMSDealer,
   fetchProducts,
   addProduct as dbAddProduct,
   deleteProduct as dbDeleteProduct,
@@ -29,7 +29,7 @@ export default function Dealers() {
   const loadData = async () => {
     setLoading(true);
     const [dealersData, productsData] = await Promise.all([
-      fetchDealers(),
+      fetchDMSDealers(),
       fetchProducts(),
     ]);
     setDealers(dealersData);
@@ -38,14 +38,23 @@ export default function Dealers() {
   };
 
   const addDealer = async (dealer: Omit<Dealer, "id">) => {
-    const newDealer = await dbAddDealer(dealer);
-    if (newDealer) {
-      setDealers([...dealers, newDealer]);
+    try {
+      const newDealer = await addDMSDealer(dealer as any);
+      if (newDealer) {
+        setDealers([...dealers, newDealer]);
+        return true;
+      } else {
+        console.error("Failed to add dealer: No data returned from insert");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error in addDealer:", error);
+      return false;
     }
   };
 
   const deleteDealer = async (id: string) => {
-    const success = await dbDeleteDealer(id);
+    const success = await deleteDMSDealer(id);
     if (success) {
       setDealers(dealers.filter((d) => d.id !== id));
     }

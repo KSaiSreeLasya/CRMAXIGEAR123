@@ -96,6 +96,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               Inventory
             </Link>
+            {isAdmin && (
+              <Link
+                to="/inventory-dispatch"
+                className="text-sm font-medium transition-colors hover:text-primary"
+              >
+                Dispatch
+              </Link>
+            )}
             <Link
               to="/dealers"
               className="text-sm font-medium transition-colors hover:text-primary"
@@ -169,6 +177,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 Inventory
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/inventory-dispatch"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dispatch
+                </Link>
+              )}
               <Link
                 to="/dealers"
                 className="text-sm font-medium transition-colors hover:text-primary"

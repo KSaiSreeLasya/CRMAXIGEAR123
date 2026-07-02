@@ -16,6 +16,7 @@ import EstimationSlip from "./pages/EstimationSlip";
 import Invoice from "./pages/Invoice";
 import Attendance from "./pages/Attendance";
 import Inventory from "./pages/Inventory";
+import InventoryDispatch from "./pages/InventoryDispatch";
 import Dealers from "./pages/Dealers";
 import AdminEmployees from "./pages/AdminEmployees";
 import AdminSettings from "./pages/AdminSettings";
@@ -50,6 +51,7 @@ function AppRoutesContent() {
       <Route path="/dealers-product-invoice" element={<ProtectedRoute element={<DealersProductInvoice />} />} />
       <Route path="/attendance" element={<ProtectedRoute element={<Attendance />} />} />
       <Route path="/inventory" element={<ProtectedRoute element={<Inventory />} />} />
+      <Route path="/inventory-dispatch" element={<ProtectedRoute element={<InventoryDispatch />} />} />
       <Route path="/dealers" element={<ProtectedRoute element={<Dealers />} />} />
       <Route path="/admin-employees" element={<ProtectedRoute element={<AdminEmployees />} />} />
       <Route path="/admin-settings" element={<ProtectedRoute element={<AdminSettings />} />} />

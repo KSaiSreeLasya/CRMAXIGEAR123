@@ -1,10 +1,40 @@
 import { supabase } from "./supabase";
+import { v4 as uuidv4 } from "uuid";
 
 export interface Dealer {
   id?: string;
   name: string;
-  contact_no: string;
-  address: string;
+  code: string;
+  email: string;
+  password: string;
+  phone?: string;
+  location?: string;
+  manager_name?: string;
+  contact_no?: string;
+  address?: string;
+}
+
+export interface DMSDealer {
+  id: string;
+  name: string;
+  code: string;
+  email: string;
+  password: string;
+  phone?: string;
+  location: string;
+  manager_name?: string;
+  logo_url?: string;
+  company_name?: string;
+  incorporation_no?: string;
+  dba_name?: string;
+  legal_structure?: string;
+  ownership_details?: string;
+  registered_address?: string;
+  document_pan?: any;
+  document_gst?: any;
+  document_shop_license?: any;
+  document_trade_license?: any;
+  created_at?: string;
 }
 
 export interface Product {
@@ -30,7 +60,56 @@ export interface Product {
   mode_of_payment: string;
 }
 
-// Dealers operations
+// DMS Dealers operations (new table)
+export async function fetchDMSDealers() {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from("dms_dealers").select("*");
+  if (error) {
+    console.error("Error fetching DMS dealers:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function addDMSDealer(dealer: Omit<DMSDealer, "id" | "created_at">) {
+  if (!supabase) return null;
+
+  const dealerId = uuidv4();
+  const { data, error } = await supabase
+    .from("dms_dealers")
+    .insert([
+      {
+        id: dealerId,
+        name: dealer.name,
+        code: dealer.code,
+        email: dealer.email,
+        password: dealer.password,
+        phone: dealer.phone || null,
+        location: dealer.location || "Not Specified",
+        manager_name: dealer.manager_name || null,
+      },
+    ])
+    .select("id,name,code,email,password,phone,location,manager_name");
+
+  if (error) {
+    console.error("Error adding DMS dealer:", error);
+    console.error("Error details:", error.message, error.details);
+    return null;
+  }
+  return data?.[0] || null;
+}
+
+export async function deleteDMSDealer(id: string) {
+  if (!supabase) return false;
+  const { error } = await supabase.from("dms_dealers").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting DMS dealer:", error);
+    return false;
+  }
+  return true;
+}
+
+// Dealers operations (legacy table)
 export async function fetchDealers() {
   if (!supabase) return [];
   const { data, error } = await supabase.from("dealers").select("*");
