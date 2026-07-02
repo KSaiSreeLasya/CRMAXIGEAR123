@@ -113,11 +113,13 @@ function computeSummary(rows: AttendanceEntry[], year: number, month: number): O
 
     switch (r.status) {
       case "Present":
-      case "Half Day":
         numPresents += 1;
         if (day !== null && isSunday(year, month, day)) {
           sundayBonusCount += 1;
         }
+        break;
+      case "Half Day":
+        numPresents += 0.5;
         break;
       case "Absent":
         numAbsents += 1;
@@ -780,22 +782,150 @@ export default function Attendance() {
 
   const cellEditStatus = cellEdit ? statusForCell(cellEdit.employee, cellEdit.day) : null;
 
+  const migrateAllPayrollRecords = async () => {
+    if (!supabase) {
+      alert("Payroll migration only works with Supabase. Local storage will auto-update on view.");
+      return;
+    }
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) {
+        alert("User not authenticated.");
+        return;
+      }
+
+      alert("Starting payroll migration for all months with Half Day corrections...");
+
+      // Get all attendance records from the database
+      const { data: allAttendance, error: attendanceError } = await supabase
+        .from("attendance")
+        .select("*")
+        .eq("user_id", uid)
+        .order("attendance_date", { ascending: true });
+
+      if (attendanceError) throw attendanceError;
+      if (!allAttendance || allAttendance.length === 0) {
+        alert("No attendance records found to migrate.");
+        return;
+      }
+
+      // Group attendance by month
+      const monthGroups: Record<string, any[]> = {};
+      for (const rec of allAttendance) {
+        const ym = rec.attendance_date.slice(0, 7);
+        if (!monthGroups[ym]) monthGroups[ym] = [];
+        monthGroups[ym].push(rec);
+      }
+
+      // For each month, recalculate payroll for all employees
+      for (const [ym, monthRecords] of Object.entries(monthGroups)) {
+        const { year: pmYear, month: pmMonth } = parseYearMonth(ym);
+
+        // Build a map of attendance entries grouped by employee
+        const empAttendanceMap: Record<string, AttendanceEntry[]> = {};
+        for (const rec of monthRecords) {
+          const emp = employees.find(
+            (e) =>
+              (rec.employee_id && rec.employee_id === e.id) ||
+              (!rec.employee_id && rec.employee_name.trim().toLowerCase() === e.fullName.trim().toLowerCase()),
+          );
+          if (!emp) continue;
+
+          if (!empAttendanceMap[emp.id]) empAttendanceMap[emp.id] = [];
+          empAttendanceMap[emp.id].push({
+            id: rec.id,
+            employeeId: rec.employee_id ?? null,
+            employeeName: rec.employee_name,
+            attendanceDate: rec.attendance_date,
+            attendanceTime: rec.attendance_time || "",
+            status: rec.status as AttendanceStatus,
+            remark: rec.remark || "",
+          });
+        }
+
+        // Recompute and upsert payroll for each employee
+        for (const [empId, empRecords] of Object.entries(empAttendanceMap)) {
+          const emp = employees.find((e) => e.id === empId);
+          if (!emp) continue;
+
+          const computed = computeSummary(empRecords, pmYear, pmMonth);
+
+          // Get existing salary values
+          const { data: existing } = await supabase
+            .from("employee_monthly_payroll")
+            .select("gross_salary, net_salary")
+            .eq("user_id", uid)
+            .eq("employee_id", empId)
+            .eq("year_month", `${ym}-01`)
+            .maybeSingle();
+
+          const gross = existing?.gross_salary != null ? Number(existing.gross_salary) : null;
+          const net = existing?.net_salary != null ? Number(existing.net_salary) : null;
+
+          const merged: PayrollRow = {
+            ...computed,
+            grossSalary: gross,
+            netSalary: net,
+          };
+
+          await supabase.from("employee_monthly_payroll").upsert(
+            {
+              user_id: uid,
+              employee_id: empId,
+              year_month: `${ym}-01`,
+              num_presents: merged.numPresents,
+              num_weekly_offs: merged.numWeeklyOffs,
+              num_absents: merged.numAbsents,
+              num_leaves: merged.numLeaves,
+              paid_days: merged.paidDays,
+              gross_salary: merged.grossSalary,
+              net_salary: merged.netSalary,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,employee_id,year_month" },
+          );
+        }
+      }
+
+      alert(`✅ Successfully migrated payroll for ${Object.keys(monthGroups).length} months! Refreshing data...`);
+      await loadPayrollForMonth();
+      await loadAttendance();
+    } catch (error: any) {
+      console.error("Migration error:", error);
+      alert(`❌ Migration failed: ${error?.message || error}`);
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-muted/30 via-background to-background">
         <div className="container mx-auto max-w-[1600px] space-y-8 px-4 py-8 sm:py-10">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/dashboard")}
-                className="gap-2 border-border/80 bg-background/80 shadow-sm backdrop-blur-sm"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate("/dashboard")}
+                  className="gap-2 border-border/80 bg-background/80 shadow-sm backdrop-blur-sm"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => migrateAllPayrollRecords()}
+                  className="gap-2 border-amber-500/30 bg-amber-500/5 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300"
+                >
+                  <span className="text-lg">⚡</span>
+                  Fix all months
+                </Button>
+              </div>
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm ring-1 ring-primary/15">
