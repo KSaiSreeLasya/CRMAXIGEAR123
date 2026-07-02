@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { getEmployeeSession, isAdminUser } from "@/lib/auth";
 import { SpareImportExport } from "@/components/SpareImportExport";
 import { ImportExport } from "@/components/ImportExport";
+import { IncomingDealerShipments } from "@/components/inventory/IncomingDealerShipments";
 
 interface InventoryItem {
   id: string;
@@ -827,9 +828,10 @@ export default function Inventory() {
         </div>
 
         <Tabs defaultValue="vehicles" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-3 bg-muted p-1 rounded-lg">
             <TabsTrigger value="vehicles" className="data-[state=active]:bg-background">Sales Vehicles Inventory</TabsTrigger>
             <TabsTrigger value="spares" className="data-[state=active]:bg-background">Spares Inventory</TabsTrigger>
+            <TabsTrigger value="incoming" className="data-[state=active]:bg-background">Incoming Shipments</TabsTrigger>
           </TabsList>
 
           {/* Sales Vehicles Inventory Tab */}
@@ -1153,6 +1155,11 @@ export default function Inventory() {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          {/* Incoming Dealer Shipments Tab */}
+          <TabsContent value="incoming" className="space-y-6">
+            <IncomingDealerShipments />
           </TabsContent>
 
         </Tabs>
