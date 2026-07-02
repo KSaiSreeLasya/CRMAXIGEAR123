@@ -299,11 +299,11 @@ export default function Attendance() {
         const next: Record<string, PayrollRow> = {};
         data?.forEach((row: any) => {
           next[row.employee_id] = {
-            numPresents: row.num_presents ?? 0,
-            numWeeklyOffs: row.num_weekly_offs ?? 0,
-            numAbsents: row.num_absents ?? 0,
-            numLeaves: row.num_leaves ?? 0,
-            paidDays: row.paid_days ?? 0,
+            numPresents: Number(row.num_presents ?? 0),
+            numWeeklyOffs: Number(row.num_weekly_offs ?? 0),
+            numAbsents: Number(row.num_absents ?? 0),
+            numLeaves: Number(row.num_leaves ?? 0),
+            paidDays: Number(row.paid_days ?? 0),
             grossSalary: row.gross_salary != null ? Number(row.gross_salary) : null,
             netSalary: row.net_salary != null ? Number(row.net_salary) : null,
           };
@@ -1180,12 +1180,12 @@ export default function Attendance() {
                                 );
                               })}
                               <td className={cn(summaryCellClass, "border-l border-amber-200/70 dark:border-amber-900/40")}>
-                                {s.numPresents}
+                                {typeof s.numPresents === 'number' ? s.numPresents % 1 === 0 ? s.numPresents : s.numPresents.toFixed(1) : s.numPresents}
                               </td>
                               <td className={summaryCellClass}>{s.numWeeklyOffs}</td>
                               <td className={summaryCellClass}>{s.numAbsents}</td>
                               <td className={summaryCellClass}>{s.numLeaves}</td>
-                              <td className={summaryCellClass}>{s.paidDays}</td>
+                              <td className={summaryCellClass}>{typeof s.paidDays === 'number' ? s.paidDays % 1 === 0 ? s.paidDays : s.paidDays.toFixed(1) : s.paidDays}</td>
                               <td className={cn(summaryCellClass, "p-1")}>
                                 <Input
                                   type="number"
